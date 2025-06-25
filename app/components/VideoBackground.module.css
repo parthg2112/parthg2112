@@ -1,0 +1,46 @@
+.videoWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+}
+
+.videoBg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.audioControl {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.audioButton {
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.audioButton:hover {
+  background: rgba(255, 0, 0, 0.4);
+}
+
+.volumeSlider {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  height: 80px;
+  margin-top: 0.5rem;
+  accent-color: red;
+}

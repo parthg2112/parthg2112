@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import VideoBackground from "./components/VideoBackground";
+import AppWrapper from "./components/AppWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,18 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'My Portfolio',
-  description: 'Created for you',
+  title: 'Portfolio',
+  description: 'parthg.me',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <VideoBackground />
-        {children}
+      <body>
+        <AppWrapper>
+          {children}
+        </AppWrapper>
       </body>
     </html>
   );

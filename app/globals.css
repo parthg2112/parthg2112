@@ -44,6 +44,17 @@ body {
   transition: opacity 1s ease-in-out;
 }
 
+.fade-wrapper {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .fade-in {
   animation: fadeIn 2s ease-in forwards;
 }

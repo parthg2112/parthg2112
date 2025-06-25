@@ -9,7 +9,7 @@ export default function Home() {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          th.me
+          parthg.me
         </div>
         <nav className={styles.nav}>
           <a href="#"
@@ -63,7 +63,7 @@ export default function Home() {
             <p className={styles.subtitle}>I'm Specialized in</p>
             <p className={styles.subtitle}>Creating Website Design.</p>
             
-            <h1 className={styles.heroTitle}>th.me</h1>
+            <h1 className={styles.heroTitle}>parthg.me</h1>
           </div>
           
           <div className={styles.rightSection}>
