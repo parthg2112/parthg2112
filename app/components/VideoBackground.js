@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 
-const VideoBackground = () => {
+const VideoBackground = ({ hasPermission }) => {
   const [videoSrc, setVideoSrc] = useState('');
-  const [audioOn, setAudioOn] = useState(true);
+  const [audioOn, setAudioOn] = useState(false);
+  const [volume, setVolume] = useState(30);
   const [mounted, setMounted] = useState(false);
-  const [userInteracted, setUserInteracted] = useState(false);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [audioLoaded, setAudioLoaded] = useState(false);
   const videoRef = useRef(null);
   const audioRef = useRef(null);
 
@@ -20,77 +22,108 @@ const VideoBackground = () => {
     else if (hour >= 11 && hour < 16) selected = '/videos/bright-day.mp4';
     else if (hour >= 16 && hour < 18.5) selected = '/videos/sunset.mp4';
     else if (hour >= 18.5 && hour < 20) selected = '/videos/evening.mp4';
-    else selected = '/videos/night.mp4';
+    else selected = '/videos/midnight.mp4';
 
     setVideoSrc(selected);
   }, []);
 
-  // Pause video when tab is inactive
+  // Initialize audio when component mounts
+  useEffect(() => {
+    if (audioRef.current) {
+      const audio = audioRef.current;
+      
+      // Set initial volume
+      audio.volume = volume / 100;
+      
+      // Audio event listeners
+      const handleCanPlay = () => {
+        setAudioLoaded(true);
+      };
+      
+      const handleError = (e) => {
+        console.error('Audio error:', e);
+        setAudioLoaded(false);
+      };
+
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('error', handleError);
+      
+      // Load the audio
+      audio.load();
+
+      return () => {
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+      };
+    }
+  }, [volume]);
+
+  // Start audio when permission is granted and user wants audio
+  useEffect(() => {
+    if (hasPermission && audioRef.current && audioOn && audioLoaded) {
+      const playAudio = async () => {
+        try {
+          audioRef.current.volume = volume / 100;
+          await audioRef.current.play();
+        } catch (error) {
+          console.log('Audio play failed:', error);
+          setAudioOn(false);
+        }
+      };
+      playAudio();
+    }
+  }, [hasPermission, audioOn, audioLoaded, volume]);
+
+  // Handle tab visibility changes
   useEffect(() => {
     const handleVisibility = () => {
+      if (!audioRef.current) return;
+      
       if (document.hidden) {
-        videoRef.current?.pause();
-        if (audioRef.current && audioOn) {
+        // Page is hidden - pause audio
+        if (audioOn) {
           audioRef.current.pause();
         }
+        videoRef.current?.pause();
       } else {
-        videoRef.current?.play();
-        if (audioRef.current && audioOn) {
-          audioRef.current.play();
+        // Page is visible - resume audio if it should be playing
+        if (audioOn && hasPermission) {
+          audioRef.current.play().catch(error => {
+            console.log('Audio resume failed:', error);
+          });
         }
+        videoRef.current?.play();
       }
     };
+
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [audioOn]);
+  }, [audioOn, hasPermission]);
 
-  // Auto-start audio after first user interaction
-  useEffect(() => {
-    const handleFirstInteraction = async () => {
-      if (!userInteracted && audioRef.current) {
-        setUserInteracted(true);
-        try {
-          audioRef.current.volume = 0.3;
-          await audioRef.current.play();
-          // Keep audioOn as true since it's already true by default
-        } catch (error) {
-          console.log('Auto-play failed:', error);
-          setAudioOn(false); // Set to false only if play fails
-        }
-      }
-    };
-
-    // Listen for any user interaction
-    const events = ['click', 'touchstart', 'keydown'];
-    events.forEach(event => {
-      document.addEventListener(event, handleFirstInteraction, { once: true });
-    });
-
-    return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleFirstInteraction);
-      });
-    };
-  }, [userInteracted]);
-
-  // Toggle audio manually
-  const handleAudioToggle = async (e) => {
-    // Prevent event bubbling to avoid triggering first interaction
-    e.stopPropagation();
-    
-    if (!audioRef.current) return;
+  // Toggle audio on/off
+  const handleAudioToggle = async () => {
+    if (!audioRef.current || !hasPermission || !audioLoaded) return;
     
     try {
       if (audioOn) {
         await audioRef.current.pause();
         setAudioOn(false);
       } else {
-        audioRef.current.volume = 0.3;
+        audioRef.current.volume = volume / 100;
         await audioRef.current.play();
         setAudioOn(true);
       }
     } catch (error) {
       console.error('Audio toggle failed:', error);
+      setAudioOn(false);
+    }
+  };
+
+  // Handle volume change
+  const handleVolumeChange = (newVolume) => {
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume / 100;
     }
   };
 
@@ -109,32 +142,131 @@ const VideoBackground = () => {
         className="w-full h-full object-cover fade-in pointer-events-none"
       />
 
-      {/* Audio Element */}
+      {/* High Quality Audio Element */}
       <audio 
         ref={audioRef} 
         src="/audio/beach.mp3" 
         loop 
         preload="auto"
+        crossOrigin="anonymous"
       />
 
-      {/* Toggle Button */}
-      <div className="absolute bottom-6 right-6 z-10">
-        <button
-          onClick={handleAudioToggle}
-          className="px-4 py-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-all text-sm font-medium backdrop-blur-sm border border-white/10"
+      {/* Audio Control */}
+      <div className="fixed bottom-6 right-6 z-20">
+        <div 
+          className="relative"
+          onMouseEnter={() => setShowVolumeSlider(true)}
+          onMouseLeave={() => setShowVolumeSlider(false)}
         >
-          {audioOn ? '🔊 Audio On' : '🔇 Audio Off'}
-        </button>
+          {/* Vertical Volume Slider */}
+          {showVolumeSlider && audioOn && (
+            <div className="absolute bottom-full right-0 mb-3 p-4 bg-black/90 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl">
+              <div className="flex flex-col items-center space-y-3">
+                <span className="text-white text-sm font-medium">Volume</span>
+                <div className="relative h-24 w-6 flex flex-col items-center">
+                  {/* Volume level indicator */}
+                  <div className="absolute inset-0 w-2 bg-gray-600 rounded-full mx-auto">
+                    <div 
+                      className="w-full bg-gradient-to-t from-blue-500 to-white rounded-full transition-all duration-200"
+                      style={{ height: `${volume}%` }}
+                    ></div>
+                  </div>
+                  
+                  {/* Vertical slider */}
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                    className="vertical-slider absolute inset-0 w-6 h-24 bg-transparent appearance-none cursor-pointer"
+                    orient="vertical"
+                  />
+                </div>
+                <span className="text-white text-xs opacity-80">{volume}%</span>
+              </div>
+            </div>
+          )}
+
+          {/* Toggle Button */}
+          <button
+            onClick={handleAudioToggle}
+            disabled={!hasPermission || !audioLoaded}
+            className={`
+              px-4 py-3 rounded-full transition-all duration-300 text-sm font-medium backdrop-blur-md border shadow-lg
+              ${audioOn 
+                ? 'bg-blue-600/80 text-white border-blue-400/30 hover:bg-blue-500/90' 
+                : 'bg-black/60 text-white/80 border-white/10 hover:bg-black/80'
+              }
+              disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center space-x-2
+            `}
+          >
+            <span className="text-lg">{audioOn ? '🔊' : '🔇'}</span>
+            <span>{audioOn ? 'Audio On' : 'Audio Off'}</span>
+            {!audioLoaded && hasPermission && (
+              <div className="ml-2 w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin"></div>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* First interaction prompt (optional) */}
-      {!userInteracted && (
-        <div className="absolute top-6 left-6 z-10">
-          <div className="px-3 py-2 bg-black/40 text-white/80 rounded text-xs backdrop-blur-sm">
-            Click anywhere to start audio
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        /* Vertical slider styling */
+        .vertical-slider {
+          writing-mode: bt-lr;
+          -webkit-appearance: slider-vertical;
+          -webkit-transform: rotate(180deg);
+          transform: rotate(180deg);
+        }
+
+        .vertical-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          transition: all 0.2s ease;
+        }
+
+        .vertical-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .vertical-slider::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .vertical-slider::-webkit-slider-track {
+          background: transparent;
+          border-radius: 3px;
+        }
+
+        .vertical-slider::-moz-range-track {
+          background: transparent;
+          border-radius: 3px;
+        }
+
+        .fade-in {
+          animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

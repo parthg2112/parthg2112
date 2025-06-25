@@ -1,4 +1,6 @@
+'use client'
 import Image from 'next/image';
+import Navbar from './Navbar'
 import styles from './page.module.css';
 
 export default function Home() {
@@ -7,12 +9,47 @@ export default function Home() {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          parthg.me
+          th.me
         </div>
         <nav className={styles.nav}>
-          <a href="#" className={styles.navLink}>Home</a>
-          <a href="#" className={styles.navLink}>About</a>
-          <a href="#" className={styles.navLink}>Project</a>
+          <a href="#"
+            className={styles.navLink}
+            data-text="Home"
+            onMouseMove={(e) => {
+              const target = e.target;
+              const rect = target.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              target.style.setProperty('--x', `${x}px`);
+            }}
+          >
+            Home
+          </a>
+          <a
+            href="#"
+            className={styles.navLink}
+            data-text="About"
+            onMouseMove={(e) => {
+              const target = e.target;
+              const rect = target.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              target.style.setProperty('--x', `${x}px`);    
+            }}
+          >
+            About
+          </a>
+          <a
+            href="#"
+            className={styles.navLink}
+            data-text="Project"
+            onMouseMove={(e) => {
+              const target = e.target;
+              const rect = target.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              target.style.setProperty('--x', `${x}px`);
+            }}
+          >
+            Project
+          </a>
         </nav>
         <button className={styles.ctaButton}>
           START A PROJECT →
@@ -26,7 +63,7 @@ export default function Home() {
             <p className={styles.subtitle}>I'm Specialized in</p>
             <p className={styles.subtitle}>Creating Website Design.</p>
             
-            <h1 className={styles.heroTitle}>PARTH</h1>
+            <h1 className={styles.heroTitle}>th.me</h1>
           </div>
           
           <div className={styles.rightSection}>
