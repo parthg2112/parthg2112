@@ -1,71 +1,62 @@
 'use client'
 import Image from 'next/image';
-import styles from './page.module.css';
+import styles from './navbar.module.css';
+import Link from 'next/link';
 
-export default function Home() {
+export default function Navbar() {
   return (
-    <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.logo}>
-          th.me
+          <Link href = "/">parthg.me</Link>
         </div>
         <nav className={styles.nav}>
-          <a href="#" className={styles.navLink}>Home</a>
-          <a href="#" className={styles.navLink}>About</a>
-          <a href="#" className={styles.navLink}>Project</a>
+
+          <Link
+            href="/about"
+            className={styles.navLink}
+            data-text="Home"
+            onMouseMove={(e) => {
+              const target = e.target;
+              const rect = target.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              target.style.setProperty('--x', `${x}px`);
+            }}
+          >
+            About
+          </Link>
+
+          <Link
+            href="/skills"
+            className={styles.navLink}
+            data-text="About"
+            onMouseMove={(e) => {
+              const target = e.target;
+              const rect = target.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              target.style.setProperty('--x', `${x}px`);
+            }}
+          >
+            Skills
+          </Link>
+
+          <Link
+            href="/projects"
+            className={styles.navLink}
+            data-text="Project"
+            onMouseMove={(e) => {
+              const target = e.target;
+              const rect = target.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              target.style.setProperty('--x', `${x}px`);
+            }}
+          >
+            Projects
+          </Link>
+
         </nav>
-
+        <button className={styles.ctaButton}>
+          START A PROJECT →
+        </button>
       </div>
-      <style jsx>{`
-        .container {
-        min-height: 100vh;
-        color: #ffffff;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        position: relative;
-        overflow-x: hidden;
-        }
-
-        /* Header */
-        .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1.5rem 2rem;
-        position: relative;
-        z-index: 10;
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.02);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .logo {
-        font-size: 1.25rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        }
-
-        .nav {
-        display: flex;
-        gap: 2rem;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        }
-
-        .navLink {
-        color: #ffffff;
-        text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 400;
-        transition: opacity 0.2s ease;
-        }
-
-        .navLink:hover {
-        opacity: 0.7;
-        }
-      `}
-      </style>
-    </div>
   );
 }

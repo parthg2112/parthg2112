@@ -1,6 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppWrapper from "./components/AppWrapper";
+import MouseGlow from "./components/mouseglow";
+import Navbar from "./Navbar";
+import AudioVisualizer from "./components/AudioVisualizer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +25,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AppWrapper>
+          <Navbar/>
           {children}
         </AppWrapper>
+        <MouseGlow />
+        <AudioVisualizer />
       </body>
     </html>
   );

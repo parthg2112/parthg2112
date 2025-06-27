@@ -53,6 +53,8 @@ export default function VideoBackground({ hasPermission }) {
     }
   };
 
+  if (!videoSrc) return null; // ✅ Prevent video from rendering with empty src
+
   return (
     <div className={styles.videoWrapper}>
       <video

@@ -1,0 +1,74 @@
+.container {
+  max-width: 700px;
+  margin: 100px auto;
+  padding: 0 1.5rem;
+  color: white;
+  font-family: 'Geist', sans-serif;
+
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 40px rgba(255, 136, 0, 0.15);
+  border-radius: 1rem;
+}
+
+.heading {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.typed {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  border-left: 2px solid white;
+  padding-left: 10px;
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
+  
+  .cursor {
+  display: inline-block;
+  width: 1ch;
+  height: 1.1rem;
+  margin-left: 2px;
+  background: linear-gradient(45deg, red, orange, yellow, green, cyan, blue, violet);
+  background-size: 400% 400%;
+  animation: flowRGB 3s linear infinite, blink 1s step-start infinite;
+}
+
+.highlight {
+  background: linear-gradient(90deg, red, orange, yellow, green, blue, violet);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeToWhite 3s forwards;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes flowRGB {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeToWhite {
+  0% {
+    -webkit-text-fill-color: transparent;
+  }
+  100% {
+    -webkit-text-fill-color: white;
+  }
+}
+
+  
