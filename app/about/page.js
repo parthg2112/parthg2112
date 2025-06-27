@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 const fullText = `I'm a creative technologist and developer who blends code with design. 
 
-Whether it's crafting dynamic UI, integrating immersive video, or building cyberpunk-inspired portfolios, I thrive on making interactive digital art. 
+Whether it's crafting dynamic UI, integrating immersive video, or building nature-inspired portfolios, I thrive on making interactive digital art. 
 
 With a love for storytelling, music, and motion, I bring together frontend flair and backend logic to create experiences that connect.`;
 
@@ -53,7 +53,7 @@ export default function AboutPage() {
   const recentlyCompletedWords = completedWords.filter(w => now - w.completedAt < 1500);
 
   return (
-    <div className="flex justify-center items-start min-h-screen pt-46 px-4">
+    <div className="flex justify-center items-start pt-46 px-4">
       <div className="max-w-3xl w-full p-12 rounded-xl text-white bg-black/30 backdrop-blur-3xl shadow-[0_0_100px_rgba(0,0,0,0.3)]">
         <h1 className="text-4xl mb-6 font-semibold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
           About Me

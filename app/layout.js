@@ -29,7 +29,6 @@ export default function RootLayout({ children }) {
           {children}
         </AppWrapper>
         <MouseGlow />
-        <AudioVisualizer />
       </body>
     </html>
   );

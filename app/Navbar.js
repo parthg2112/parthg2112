@@ -54,7 +54,7 @@ export default function Navbar() {
           </Link>
 
         </nav>
-        <button className={styles.ctaButton}>
+        <button className={styles.ctaButton} data-hover-text="COMING SOON!">
           START A PROJECT →
         </button>
       </div>

@@ -1,74 +1,129 @@
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  position: relative;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-  background: rgba(133, 132, 132, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    position: relative;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    background: rgba(133, 132, 132, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
 .nav {
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  max-width: 400px;
-  margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 
 .navLink {
-  color: #ffffff;
-  font-size: 1.05rem;
-  font-weight: 400;
-  position: relative;
-  text-decoration: none;
-  padding: 0.25rem 0;
-  transition: color 0.3s ease;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 400;
+    position: relative;
+    text-decoration: none;
+    padding: 0.25rem 0;
+    transition: color 0.3s ease;
 }
 
 .navLink::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: var(--x, 50%);
-  transform: translate(-50%, -50%);
-  width: 0.5rem;
-  height: 0.5rem;
-  background: red;
-  border-radius: 50%;
-  filter: blur(8px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: var(--x, 50%);
+    transform: translate(-50%, -50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    background: red;
+    border-radius: 50%;
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
 }
 
 .navLink:hover::after {
-  opacity: 1;
+    opacity: 1;
 }
 
 
 .ctaButton {
-  background: transparent;
-  border: 1px solid #333333;
-  color: #ffffff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    position: relative;
+    background: rgba(26, 26, 26, 0.9);
+    border: 2px solid transparent;
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    z-index: 1;
+    background-clip: padding-box;
+}
+
+.ctaButton::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg,
+            #ff0000, #ff7300, #fffb00, #48ff00,
+            #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+    background-size: 400%;
+    border-radius: 50px;
+    z-index: -1;
+    animation: rainbow 3s linear infinite;
+    padding: 2px;
+    margin: -2px;
+}
+
+.ctaButton::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: rgba(26, 26, 26, 0.95);
+    border-radius: 48px;
+    z-index: -1;
 }
 
 .ctaButton:hover {
-  background-color: #ffffff;
-  color: #000000;
+    transform: scale(1.01);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.ctaButton:hover::after {
+    /* background: rgba(26, 26, 26, 0.8); */
+    background: #000;
+}
+
+.ctaButton:active {
+    transform: scale(0.98);
+}
+
+@keyframes rainbow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }

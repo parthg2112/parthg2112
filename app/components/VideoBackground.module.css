@@ -1,7 +1,11 @@
+/* Video Background Styles */
 .videoWrapper {
   position: fixed;
-  inset: 0;
-  z-index: -10;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
   overflow: hidden;
 }
 
@@ -9,38 +13,195 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none;
+  object-position: center;
 }
 
+/* Audio Controls - Moved to bottom left */
 .audioControl {
   position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  z-index: 20;
+  bottom: 50px; /* Above the visualizer */
+  right: 40px;
+  z-index: 1000;
+}
+
+.controlGroup {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  gap: 10px;
+  position: relative;
 }
 
 .audioButton {
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.8rem;
+  padding: 10px 16px;
+  border-radius: 100%;
   cursor: pointer;
-  transition: background 0.3s;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(15px);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .audioButton:hover {
-  background: rgba(255, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.95);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.volumeContainer {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 12px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  transform-origin: bottom center;
+  transform: translateX(-50%) scaleY(0);
+  margin-bottom: 8px;
+}
+
+.controlGroup:hover .volumeContainer {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) scaleY(1);
 }
 
 .volumeSlider {
-  writing-mode: vertical-lr;
-  direction: rtl;
+  width: 4px;
   height: 80px;
-  margin-top: 0.5rem;
-  accent-color: red;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  transition: all 0.3s ease;
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
+}
+
+.volumeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.volumeLabel {
+  color: white;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  min-width: 35px;
+  text-align: center;
+}
+
+/* Audio Visualizer - Fixed at bottom */
+.audioVisualizer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 80px;
+  pointer-events: none;
+  z-index: 10;
+  background: linear-gradient(
+    to top, 
+    rgba(0, 0, 0, 0.4) 0%, 
+    rgba(0, 0, 0, 0.2) 50%, 
+    transparent 100%
+  );
+  opacity: 0.9;
+  transition: opacity 0.5s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .audioControl {
+    bottom: 90px;
+    left: 15px;
+  }
+  
+  .audioButton {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .volumeContainer {
+    padding: 10px 6px;
+  }
+  
+  .volumeSlider {
+    height: 60px;
+  }
+  
+  .audioVisualizer {
+    height: 60px;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 480px) {
+  .audioControl {
+    bottom: 80px;
+    left: 10px;
+  }
+  
+  .audioButton {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  
+  .audioVisualizer {
+    height: 50px;
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.audioButton.playing {
+  animation: pulse 2s ease-in-out infinite;
 }
