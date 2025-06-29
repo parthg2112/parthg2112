@@ -16,10 +16,10 @@
   object-position: center;
 }
 
-/* Audio Controls - Moved to bottom left */
+/* Audio Controls - Bottom right */
 .audioControl {
   position: fixed;
-  bottom: 50px; /* Above the visualizer */
+  bottom: 60px; /* Above the visualizer */
   right: 40px;
   z-index: 1000;
 }
@@ -27,107 +27,127 @@
 .controlGroup {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
   position: relative;
 }
 
 .audioButton {
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  /* background: rgba(55, 65, 81, 0.9); */
+  background: #242222bb;
+  border: none;
   color: white;
-  padding: 10px 16px;
-  border-radius: 100%;
+  padding: 0;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 14px;
-  font-family: 'Courier New', monospace;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(15px);
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 18px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .audioButton:hover {
-  background: rgba(0, 0, 0, 0.95);
-  border-color: rgba(255, 255, 255, 0.7);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  /* background: rgba(75, 85, 99, 0.95); */
+  background: #242222e1;
+  /* transform: scale(1.05); */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .volumeContainer {
   position: absolute;
-  bottom: 100%;
+  bottom: 52px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 12px 8px;
-  border-radius: 6px;
+  gap: 12px;
+  /* background: linear-gradient(
+    to top,
+    rgba(55, 65, 81, 0.95) 0%,
+    rgba(55, 65, 81, 0.85) 70%,
+    rgba(55, 65, 81, 0.0) 100%
+  ); */
+  background: linear-gradient(
+    to top,
+    rgba(38, 38, 39, 0.95) 0%,
+    rgba(43, 44, 46, 0.85) 70%,
+    rgba(24, 28, 34, 0) 100%
+  );
+  padding: 20px 16px 8px 16px;
+  border-radius: 26px 26px 26px 26px;
   backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   transform-origin: bottom center;
-  transform: translateX(-50%) scaleY(0);
-  margin-bottom: 8px;
+  transform: translateX(-50%) translateY(15px) scale(0.8);
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  width: 52px;
 }
 
 .controlGroup:hover .volumeContainer {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translateX(-50%) scaleY(1);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
 .volumeSlider {
   width: 4px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.3);
+  height: 120px;
+  /* background: rgba(156, 163, 175, 0.4); */
+  background: #161616;
   border-radius: 2px;
   outline: none;
   cursor: pointer;
   appearance: none;
-  transition: all 0.3s ease;
-  writing-mode: bt-lr; /* IE */
-  -webkit-appearance: slider-vertical; /* WebKit */
+  transition: all 0.2s ease;
+  writing-mode: bt-lr;
+  -webkit-appearance: slider-vertical;
 }
 
 .volumeSlider::-webkit-slider-thumb {
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: white;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
 .volumeSlider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .volumeSlider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: white;
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .volumeLabel {
   color: white;
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
-  min-width: 35px;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 500;
+  opacity: 0.9;
+  min-width: 30px;
   text-align: center;
 }
 
@@ -137,37 +157,41 @@
   bottom: 0;
   left: 0;
   width: 100vw;
-  height: 80px;
+  height: 50px;
   pointer-events: none;
-  z-index: 10;
+  z-index: 100;
   background: linear-gradient(
     to top, 
-    rgba(0, 0, 0, 0.4) 0%, 
-    rgba(0, 0, 0, 0.2) 50%, 
+    rgba(0, 0, 0, 0.7) 0%, 
+    rgba(0, 0, 0, 0.4) 50%, 
     transparent 100%
   );
-  opacity: 0.9;
+  opacity: 1;
   transition: opacity 0.5s ease;
+  border: none;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .audioControl {
     bottom: 90px;
-    left: 15px;
+    right: 20px;
   }
   
   .audioButton {
-    padding: 8px 12px;
-    font-size: 12px;
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
   }
   
   .volumeContainer {
-    padding: 10px 6px;
+    bottom: 48px;
+    padding: 18px 14px 6px 14px;
+    width: 48px;
   }
   
   .volumeSlider {
-    height: 60px;
+    height: 100px;
   }
   
   .audioVisualizer {
@@ -179,12 +203,18 @@
 @media (max-width: 480px) {
   .audioControl {
     bottom: 80px;
-    left: 10px;
+    right: 15px;
   }
   
   .audioButton {
-    font-size: 11px;
-    padding: 6px 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 14px;
+  }
+  
+  .volumeContainer {
+    bottom: 44px;
+    width: 44px;
   }
   
   .audioVisualizer {
@@ -192,16 +222,18 @@
   }
 }
 
-/* Animations */
-@keyframes pulse {
-  0%, 100% {
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-  50% {
-    border-color: rgba(255, 255, 255, 0.8);
-  }
+/* Subtle animations */
+.audioButton.playing {
+  /* background: rgba(59, 130, 246, 0.9); */
+  /* background: white; */
 }
 
-.audioButton.playing {
-  animation: pulse 2s ease-in-out infinite;
+.audioButton.playing:hover {
+  /* background: rgba(59, 130, 246, 1); */
+  /* background: white; */
+}
+
+.audioVisualizer {
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.2) !important;
 }

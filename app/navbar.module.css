@@ -43,7 +43,7 @@
     transform: translate(-50%, -50%);
     width: 0.5rem;
     height: 0.5rem;
-    background: red;
+    background: cyan;
     border-radius: 50%;
     filter: blur(8px);
     opacity: 0;

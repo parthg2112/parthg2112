@@ -84,8 +84,8 @@
 
 /* Main Content */
 .main {
+  margin-top: 14%;
   padding: 2rem;
-  height: calc(100vh - 100px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -208,4 +208,10 @@
     font-size: 0.8rem;
   }
   
+}
+
+.fade-wrapper {
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  pointer-events: none;  /* Add this */
 }

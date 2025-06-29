@@ -11,7 +11,7 @@ export default function Home() {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.leftSection}>
-            <p className={styles.subtitle}>I'm Specialized in</p>
+            <p className={styles.subtitle}>I&apos;m Specialized in</p>
             <p className={styles.subtitle}>Creating Website Design.</p>
 
             <h1 className={styles.heroTitle}>parthg.me</h1>

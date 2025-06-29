@@ -12,17 +12,13 @@ export default function AppWrapper({ children }) {
 
   useEffect(() => {
     const handleInitial = () => {
-      const alreadyEntered = sessionStorage.getItem('hasEntered');
       const hadAudioPermission = sessionStorage.getItem('audioPermission');
       const savedTimezone = localStorage.getItem('selectedTimezone');
 
-      if (alreadyEntered === 'true') {
-        setHasEntered(true);
-        setFadeIn(true);
-        setAudioPermission(hadAudioPermission === 'true');
-        if (savedTimezone) {
-          setSelectedTimezone(savedTimezone);
-        }
+      // Always show loading screen on reload - removed the hasEntered check
+      setAudioPermission(hadAudioPermission === 'true');
+      if (savedTimezone) {
+        setSelectedTimezone(savedTimezone);
       }
 
       setHasMounted(true);
@@ -56,13 +52,13 @@ export default function AppWrapper({ children }) {
 
       {hasEntered && (
         <>
+          <div className={`fade-wrapper ${fadeIn ? 'fade-in' : ''}`}>
+            {children}
+          </div>
           <VideoBackground 
             hasPermission={audioPermission} 
             selectedTimezone={selectedTimezone}
           />
-          <div className={`fade-wrapper ${fadeIn ? 'fade-in' : ''}`}>
-            {children}
-          </div>
         </>
       )}
       
@@ -70,6 +66,8 @@ export default function AppWrapper({ children }) {
         .fade-wrapper {
           opacity: 0;
           transition: opacity 0.8s ease-in-out;
+          position: relative;
+          z-index: 1;
         }
         
         .fade-wrapper.fade-in {
