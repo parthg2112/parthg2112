@@ -33,7 +33,6 @@
   margin: 0 auto;
 }
 
-
 .navLink {
   color: #ffffff;
   font-size: 1.05rem;
@@ -64,7 +63,6 @@
   opacity: 1;
 }
 
-
 .ctaButton {
   background: transparent;
   border: 1px solid #333333;
@@ -82,9 +80,11 @@
   color: #000000;
 }
 
+
+
 /* Main Content */
 .main {
-  margin-top: 14%;
+  margin-top: 18rem;
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -107,7 +107,7 @@
 }
 
 .subtitle {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 300;
   line-height: 1.4;
   margin: 0;
@@ -121,6 +121,15 @@
   line-height: 0.9;
   margin: 2rem 0 0 0;
   text-transform: uppercase;
+}
+
+.cursor {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 .rightSection {
@@ -148,7 +157,6 @@
   height: 100%;
   object-fit: cover;
 }
-
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -207,11 +215,10 @@
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
   }
-  
 }
 
 .fade-wrapper {
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
-  pointer-events: none;  /* Add this */
+  pointer-events: none;
 }

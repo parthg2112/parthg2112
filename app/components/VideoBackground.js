@@ -25,16 +25,14 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     '/audio/track4.mp3',
     '/audio/track5.mp3',
     '/audio/track6.mp3',
-    '/audio/track7.mp3',
-    '/audio/track8.mp3',
-    '/audio/track9.mp3',
-    '/audio/track10.mp3'
+    '/audio/track7.mp3'
   ];
 
   const [trackIndex, setTrackIndex] = useState(() => (
     Math.floor(Math.random() * tracks.length)
   ));
   const [audioSrc, setAudioSrc] = useState(tracks[trackIndex]);
+
   // Load video based on time and timezone
   useEffect(() => {
     const getVideoBasedOnTimezone = () => {
@@ -63,38 +61,24 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     getVideoBasedOnTimezone();
   }, [selectedTimezone]);
 
-  // Setup canvas on mount
+  // Setup canvas and start visualization
   useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
       const resizeCanvas = () => {
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = 80 * dpr;
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = '80px';
-
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
+        canvas.width = window.innerWidth;
+        canvas.height = 180;
       };
 
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      // Start visualization even without audio (will show empty bars)
-      startVisualization();
+      // Start the clean waveform visualization
+      startCleanVisualization();
 
       return () => {
         window.removeEventListener('resize', resizeCanvas);
-        console.log('Canvas dimensions:', {
-          width: canvas.width,
-          height: canvas.height,
-          styleWidth: canvas.style.width,
-          styleHeight: canvas.style.height,
-          dpr: window.devicePixelRatio
-        });
       };
-
     }
   }, []);
 
@@ -136,7 +120,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     }
   }, [hasPermission, volume, audioInitialized]);
 
-  // Setup Web Audio API for visualization
+  // Setup Web Audio API for clean waveform visualization
   const setupWebAudio = () => {
     if (audioContextRef.current || !audioRef.current) {
       console.log('Web Audio setup skipped:', {
@@ -144,7 +128,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
         audioExists: !!audioRef.current
       });
       return;
-    };
+    }
 
     try {
       console.log('Setting up Web Audio API...');
@@ -155,10 +139,8 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
       console.log('Audio context state:', audioContextRef.current.state);
 
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 512; // Increased for better resolution
-      analyserRef.current.smoothingTimeConstant = 0.7; // Smoother transitions
-      analyserRef.current.minDecibels = -90;
-      analyserRef.current.maxDecibels = -10;
+      analyserRef.current.fftSize = 2048; // For clean waveform like your AudioVisualizer
+      analyserRef.current.smoothingTimeConstant = 0.7; // Smooth but responsive
 
       sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
       sourceRef.current.connect(analyserRef.current);
@@ -166,18 +148,13 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
       console.log('Web Audio API setup complete');
 
-      console.log('Analyser created:', {
-        fftSize: analyserRef.current.fftSize,
-        frequencyBinCount: analyserRef.current.frequencyBinCount
-      });
-
     } catch (error) {
       console.warn('Web Audio API setup failed:', error);
     }
   };
 
-  // Audio visualization
-  const startVisualization = () => {
+  // Clean waveform visualization (from your AudioVisualizer.js)
+  const startCleanVisualization = () => {
     if (!canvasRef.current) {
       console.warn('Canvas not available for visualization');
       return;
@@ -186,84 +163,76 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    console.log('Starting visualization...');
+    console.log('Starting clean waveform visualization...');
+
+    const waveArray = new Uint8Array(2048);
 
     const draw = () => {
-      if (Math.random() < 0.01) { // Log occasionally to avoid spam
-        console.log('Draw function running:', {
-          audioOn,
-          hasAnalyser: !!analyserRef.current,
-          canvasExists: !!canvasRef.current
-        });
-      }
-      const width = canvas.width / (window.devicePixelRatio || 1);
-      const height = 80;
-
-      // Clear canvas with a subtle gradient background
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.1)');
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      if (audioOn && analyserRef.current) {
-
-        const sum = dataArray.reduce((a, b) => a + b, 0);
-        if (Math.random() < 0.01) {
-          console.log('Audio data:', {
-            bufferLength,
-            sum,
-            sample: Array.from(dataArray.slice(0, 10))
-          });
-        }
-
-        const bufferLength = analyserRef.current.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        // Draw frequency bars
-        const barCount = 80; // More bars for better resolution
-        const barWidth = width / barCount;
-        const maxHeight = height * 0.7; // 70% of canvas height
-
-        // Create a glow effect
-        ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 4;
-
-        for (let i = 0; i < barCount; i++) {
-          // Use logarithmic scaling for better frequency distribution
-          const dataIndex = Math.floor((i / barCount) * bufferLength * 0.5); // Use lower half for better bass/mid representation
-          let barHeight = (dataArray[dataIndex] / 255) * maxHeight;
-
-          // Apply some smoothing and minimum height
-          barHeight = Math.max(barHeight, 2);
-
-          // Color based on frequency and amplitude
-          const hue = (i / barCount) * 60; // Blue to cyan spectrum
-          const alpha = 0.6 + (barHeight / maxHeight) * 0.4;
-          ctx.fillStyle = `hsla(${180 + hue}, 70%, 80%, ${alpha})`;
-
-          const x = i * barWidth;
-          const y = height - barHeight;
-
-          // Draw bar with rounded top
-          ctx.beginPath();
-          ctx.roundRect(x + 1, y, barWidth - 2, barHeight, [2, 2, 0, 0]);
-          ctx.fill();
-        }
-
-        ctx.shadowBlur = 0;
-      } else {
-        // Show subtle static pattern when audio is off
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        for (let i = 0; i < 60; i += 4) {
-          const x = (i / 60) * width;
-          const staticHeight = Math.random() * 8 + 2;
-          ctx.fillRect(x, height - staticHeight, 2, staticHeight);
-        }
-      }
-
       animationRef.current = requestAnimationFrame(draw);
+      
+      // Clear canvas completely for clean look
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (audioOn && analyserRef.current) {
+        // Get waveform data only
+        analyserRef.current.getByteTimeDomainData(waveArray);
+        drawCleanWaveform(ctx, waveArray, canvas);
+      } else {
+        // Draw static line when not playing
+        drawStaticLine(ctx, canvas);
+      }
+    };
+
+    const drawCleanWaveform = (ctx, data, canvas) => {
+      // Main waveform
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+
+      const sliceWidth = canvas.width / data.length;
+      let x = 0;
+
+      // Create smooth curve points
+      const points = [];
+      for (let i = 0; i < data.length; i++) {
+        const v = data[i] / 128.0; // Normalize to -1 to 1
+        const y = (v * canvas.height / 2.5) + (canvas.height / 2); // Center and scale
+        points.push({ x, y });
+        x += sliceWidth;
+      }
+
+      // Draw smooth curve
+      if (points.length > 0) {
+        ctx.moveTo(points[0].x, points[0].y);
+        
+        for (let i = 1; i < points.length - 1; i++) {
+          const currentPoint = points[i];
+          const nextPoint = points[i + 1];
+          const controlX = (currentPoint.x + nextPoint.x) / 2;
+          const controlY = (currentPoint.y + nextPoint.y) / 2;
+          
+          ctx.quadraticCurveTo(currentPoint.x, currentPoint.y, controlX, controlY);
+        }
+        
+        if (points.length > 1) {
+          const lastPoint = points[points.length - 1];
+          ctx.lineTo(lastPoint.x, lastPoint.y);
+        }
+      }
+
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    };
+
+    const drawStaticLine = (ctx, canvas) => {
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
     };
 
     draw();
@@ -317,8 +286,6 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
   if (!videoSrc) return null;
 
-
-
   return (
     <div className={styles.videoWrapper}>
       <video
@@ -331,24 +298,20 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
         className={styles.videoBg}
       />
 
-      {/* <audio
-        ref={audioRef}
-        src="/audio/beach.mp3"
-        preload="auto"
-      /> */}
-
       <audio
         ref={audioRef}
         src={audioSrc}
         loop
         autoPlay
         preload="auto"
+        crossOrigin="anonymous"
       />
 
-      {/* Audio Visualizer - Fixed position at bottom */}
+      {/* Clean Waveform Visualizer - Fixed position at bottom like your AudioVisualizer */}
       <canvas
         ref={canvasRef}
-        className={styles.audioVisualizer}
+        className="fixed top-2000 left-0 w-full h-[180px] z-40 block"
+        style={{ width: '100vw', height: '180px' }}
       />
 
       {/* Audio Controls - Fixed position bottom right */}
@@ -362,7 +325,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
             onClick={toggleAudio}
             className={`${styles.audioButton} ${audioOn ? styles.playing : ''}`}
           >
-            {audioOn ? '🔊' : '🔇'}
+            {audioOn ? '> >' : '| |'}
           </button>
 
           {showVolume && (
@@ -380,6 +343,11 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Optional: Click indicator like in your AudioVisualizer */}
+      <div className="absolute bottom-8 right-6 text-white text-sm opacity-70 pointer-events-none">
+        {!audioOn ? 'Audio paused' : 'Audio playing'}
       </div>
     </div>
   );

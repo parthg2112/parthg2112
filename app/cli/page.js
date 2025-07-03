@@ -7,18 +7,19 @@ const initialDir = {
   home: {
     guest: {
       skills: {
-        'frontend.txt': 'React, Next.js, Tailwind CSS',
-        'backend.txt': 'Node.js, Express, MongoDB'
+        'frontend': 'React, Next.js, Tailwind CSS',
+        'backend': 'SQLite3, Apache, Node.js, Flask'
       },
       projects: {
-        'portfolio.txt': 'My dev portfolio built with Next.js',
-        'ai-helper.txt': 'An AI tool for language and interview prep'
+        'SAANai': 'A real-time AI tool that analyzes speech or writing to assess clarity, tone, and personality using the Big Five Model.',
+        'MindMarket': 'AI-Powered Ad Targeting: An intelligent ad system that studies a user’s digital behavior searches, purchases, patterns, to recommend products with uncanny relevance.',
+        'Portfolio': 'My dev portfolio built with Next.js'
       },
       about: {
-        'bio.txt': 'Creative full-stack developer with a passion for design, AI, and interaction.'
+        'bio': 'I am a creative technologist and developer who blends code with design.'
       },
       education: {
-        'college.txt': 'BTech in Computer Engineering from GEU'
+        'college': '2nd year BTech student in Information Technology from NMIMS with 9.13 CGPA'
       }
     }
   }

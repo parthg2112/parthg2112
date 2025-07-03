@@ -9,13 +9,26 @@ Whether it's crafting dynamic UI, integrating immersive video, or building natur
 With a love for storytelling, music, and motion, I bring together frontend flair and backend logic to create experiences that connect.`;
 
 export default function AboutPage() {
-  const [displayedText, setDisplayedText] = useState('');
-  const [currentCharIndex, setCurrentCharIndex] = useState(0);
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  // Check if typing was completed in this session
+  const getTypingCompleted = () => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('aboutTypingCompleted') === 'true';
+    }
+    return false;
+  };
+
+  const [displayedText, setDisplayedText] = useState(() => getTypingCompleted() ? fullText : '');
+  const [currentCharIndex, setCurrentCharIndex] = useState(() => getTypingCompleted() ? fullText.length : 0);
+  const [isTypingComplete, setIsTypingComplete] = useState(() => getTypingCompleted());
   const [completedWords, setCompletedWords] = useState([]);
-  const [currentWordStartTime, setCurrentWordStartTime] = useState(Date.now());
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
+    // If typing was already completed, don't restart it
+    if (getTypingCompleted()) {
+      return;
+    }
+
     if (currentCharIndex < fullText.length) {
       const timeout = setTimeout(() => {
         const newText = fullText.slice(0, currentCharIndex + 1);
@@ -30,7 +43,6 @@ export default function AboutPage() {
               word: justCompletedWord,
               completedAt: Date.now()
             }]);
-            setCurrentWordStartTime(Date.now());
           }
         }
 
@@ -41,8 +53,20 @@ export default function AboutPage() {
       return () => clearTimeout(timeout);
     } else {
       setIsTypingComplete(true);
+      // Mark as completed in sessionStorage
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('aboutTypingCompleted', 'true');
+      }
     }
   }, [currentCharIndex, displayedText]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
 
   const words = displayedText.split(/(\s+)/);
   const lastWordIndex = words.length - 1;
@@ -53,14 +77,52 @@ export default function AboutPage() {
   const recentlyCompletedWords = completedWords.filter(w => now - w.completedAt < 1500);
 
   return (
-    <div className="flex justify-center items-start pt-46 px-4">
-      <div className="max-w-3xl w-full p-12 rounded-xl text-white bg-black/30 backdrop-blur-3xl shadow-[0_0_100px_rgba(0,0,0,0.3)]">
-        <h1 className="text-4xl mb-6 font-semibold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+    <div className="flex justify-center items-start pt-45 px-4font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
+      <div 
+        className="max-w-3xl w-full p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl"
+        onMouseMove={handleMouseMove}
+        style={{
+          background: `
+            radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(14, 165, 233, 0.15), transparent 40%),
+            rgba(0, 0, 0, 0.2)
+          `,
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          boxShadow: `
+            0 8px 32px rgba(0, 0, 0, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1)
+          `,
+          border: '1px solid rgba(255, 255, 255, 0.1)'
+        }}
+      >
+        {/* Enhanced glowing border effect */}
+        <div 
+          className="absolute inset-0 rounded-3xl opacity-60 transition-all duration-500 pointer-events-none"
+          style={{
+            background: `radial-gradient(500px circle at ${mousePos.x}px ${mousePos.y}px, rgba(14, 165, 233, 0.3), rgba(168, 85, 247, 0.2) 40%, transparent 70%)`,
+            filter: 'blur(1px)',
+            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            maskComposite: 'subtract',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'subtract',
+            padding: '1px'
+          }}
+        />
+
+        {/* Subtle inner glow */}
+        <div 
+          className="absolute inset-0 rounded-3xl opacity-30 transition-all duration-700 pointer-events-none"
+          style={{
+            background: `radial-gradient(300px circle at ${mousePos.x}px ${mousePos.y}px, rgba(34, 211, 238, 0.25), transparent 60%)`,
+          }}
+        />
+
+        <h1 className="text-4xl mb-8 font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent relative z-10 font-['Helvetica_Neue','Helvetica','Arial','sans-serif'] tracking-tight">
           About Me
         </h1>
 
-        <div className="border-l-2 border-white pl-4">
-          <p className="text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="border-l-4 border-gradient-to-b from-cyan-400 to-purple-500 border-white/30 pl-6 relative z-10">
+          <p className="text-lg leading-relaxed whitespace-pre-wrap font-normal tracking-wide">
             {completedText.split(/(\s+)/).map((part, index) => {
               const isRecentlyCompleted = recentlyCompletedWords.some(w => w.word === part);
 
@@ -68,32 +130,53 @@ export default function AboutPage() {
                 return (
                   <span
                     key={index}
+                    className="transition-all duration-1500"
                     style={{
                       background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8, #ff6b6b)',
                       backgroundSize: '600% 600%',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
-                      animation: 'rgbFlowSlow 6s ease-in-out infinite, fadeToWhiteDelayed 1.5s forwards'
+                      animation: 'rgbFlowSlow 6s ease-in-out infinite, fadeToWhiteDelayed 1.5s forwards',
+                      filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.3))'
                     }}
                   >
                     {part}
                   </span>
                 );
               }
-              return <span key={index} className="text-white">{part}</span>;
+              return <span key={index} className="text-white/90">{part}</span>;
             })}
 
-            {currentWord && (
+            {currentWord && !isTypingComplete && (
               <span
-                className="current-word"
+                className="transition-all duration-300"
                 style={{
                   background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8, #ff6b6b)',
                   backgroundSize: '600% 600%',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  animation: 'rgbFlowSlow 6s ease-in-out infinite'
+                  animation: 'rgbFlowSlow 6s ease-in-out infinite',
+                  filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.3))'
+                }}
+              >
+                {currentWord}
+              </span>
+            )}
+
+            {/* Show remaining text with continuous RGB flow if typing is complete */}
+            {isTypingComplete && currentWord && (
+              <span
+                className="transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8, #ff6b6b)',
+                  backgroundSize: '600% 600%',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  animation: 'rgbFlowSlow 6s ease-in-out infinite',
+                  filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.3))'
                 }}
               >
                 {currentWord}
@@ -102,11 +185,12 @@ export default function AboutPage() {
 
             {!isTypingComplete && (
               <span
-                className="cursor inline-block w-[2px] h-[1.2rem] ml-1"
+                className="inline-block w-0.5 h-6 ml-1 shadow-lg"
                 style={{
                   background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8)',
                   backgroundSize: '300% 300%',
-                  animation: 'rgbFlow 3s ease-in-out infinite, blink 1.2s step-start infinite'
+                  animation: 'rgbFlow 3s ease-in-out infinite, blink 1.2s step-start infinite',
+                  filter: 'drop-shadow(0 0 4px rgba(255, 107, 107, 0.5))'
                 }}
               />
             )}
@@ -141,15 +225,11 @@ export default function AboutPage() {
               -webkit-text-fill-color: transparent;
             }
             100% {
-              -webkit-text-fill-color: white;
+              -webkit-text-fill-color: rgba(255, 255, 255, 0.9);
             }
-          }
-
-          .current-word {
-            transition: all 0.5s ease;
           }
         `}</style>
       </div>
     </div>
   );
-} 
+}

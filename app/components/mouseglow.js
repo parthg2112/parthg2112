@@ -22,11 +22,11 @@ export default function MouseGlow() {
       className="fixed top-0 left-0 w-[50px] h-[50px] pointer-events-none z-50
         rounded-full mix-blend-screen opacity-70
         -translate-x-1/2 -translate-y-1/2
-        bg-[radial-gradient(ellipse_at_center,_#ffffff20_0%,_#ffffff08_40%,_transparent_70%)]
+        bg-[radial-gradient(ellipse_at_center,_#ffffff20_0%,_#ffffff08_40%,_transparent_50%)]
         shadow-[0_0_50px_10px_rgba(255,255,255,0.1)]
-        backdrop-blur-[2px]
+        backdrop-blur-[1px]
         before:content-[''] before:absolute before:inset-0
-        before:bg-[url('/stars-texture.png')] before:bg-cover before:opacity-30 before:rounded-full
+        before:bg-cover before:opacity-30 before:rounded-full
         before:mix-blend-overlay"
     />
   );

@@ -1,85 +1,58 @@
-'use client'
+// AudioVisualizer.jsx
+'use client';
+import styles from '../cli/page.module.css'
+import { useEffect, useRef } from 'react';
 
-import { useEffect, useRef } from 'react'
-
-export default function AudioVisualizer() {
-  const canvasRef = useRef(null)
-  const audioRef = useRef(null)
+export default function AudioVisualizer({ audioRef }) {
+  const canvasRef = useRef(null);
+  const analyserRef = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    const audio = audioRef.current
+    if (!audioRef.current) return;
 
-    if (!canvas || !audio) return
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaElementSource(audioRef.current);
 
-    const ctx = canvas.getContext('2d')
-    canvas.width = window.innerWidth
-    canvas.height = 100
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 128;
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    const source = audioCtx.createMediaElementSource(audio)
-    const analyser = audioCtx.createAnalyser()
-    analyser.fftSize = 2048
+    analyserRef.current = analyser;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
 
-    const bufferLength = analyser.fftSize
-    const dataArray = new Uint8Array(bufferLength)
-
-    source.connect(analyser)
-    analyser.connect(audioCtx.destination)
+    canvas.width = window.innerWidth;
+    canvas.height = 100;
 
     const draw = () => {
-      requestAnimationFrame(draw)
-      analyser.getByteTimeDomainData(dataArray)
+      requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.lineWidth = 2
-      ctx.strokeStyle = '#0ff'
-      ctx.beginPath()
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const sliceWidth = canvas.width / bufferLength
-      let x = 0
+      const barWidth = (canvas.width / bufferLength);
+      let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0
-        const y = (v * canvas.height) / 2
-
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
-        x += sliceWidth
+        const barHeight = dataArray[i] * 0.5;
+        ctx.fillStyle = 'rgb(255 255 255 / 0.9)';
+        ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
+        x += barWidth;
       }
+    };
 
-      ctx.lineTo(canvas.width, canvas.height / 2)
-      ctx.stroke()
-    }
+    draw();
 
-    draw()
-
-    const handleResize = () => (canvas.width = window.innerWidth)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+    return () => {
+      analyser.disconnect();
+      source.disconnect();
+    };
+  }, [audioRef]);
 
   return (
-    <>
-      <audio
-        ref={audioRef}
-        src="/audio/beach.mp3"
-        autoPlay
-        loop
-        style={{ display: 'none' }}
-      />
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          width: '100vw',
-          height: '100px',
-          zIndex: 50,
-          pointerEvents: 'none',
-          filter: 'drop-shadow(0 0 8px #f5f3e4) brightness(1.2)',
-        }}
-      />
-    </>
-  )
+    <canvas ref={canvasRef} className="w-full h-[100px] absolute bottom-0 left-0 z-10" />
+  );
 }
