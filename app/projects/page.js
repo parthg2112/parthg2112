@@ -54,7 +54,7 @@ export default function AboutPage() {
 
         setDisplayedText(newText);
         setCurrentCharIndex(prev => prev + 1);
-      }, 50);
+      }, 30);
 
       return () => clearTimeout(timeout);
     } else {
@@ -85,7 +85,7 @@ export default function AboutPage() {
   return (
     <div className="flex justify-center items-start pt-30 px-4 font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
       <div 
-        className="max-w-3xl w-full p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl"
+        className="max-w-3xl w-full p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl projects-container"
         onMouseMove={handleMouseMove}
         style={{
           background: `
@@ -123,12 +123,12 @@ export default function AboutPage() {
           }}
         />
 
-        <h1 className="text-4xl mb-8 font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent relative z-10 font-['Helvetica_Neue','Helvetica','Arial','sans-serif'] tracking-tight">
+        <h1 className="text-4xl mb-8 font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent relative z-10 font-['Helvetica_Neue','Helvetica','Arial','sans-serif'] tracking-tight projects-title">
           Projects
         </h1>
 
         <div className="border-l-4 border-gradient-to-b from-cyan-400 to-purple-500 border-white/30 pl-6 relative z-10">
-          <p className="text-lg leading-relaxed whitespace-pre-wrap font-normal tracking-wide">
+          <p className="text-lg leading-relaxed whitespace-pre-wrap font-normal tracking-wide projects-text">
             {completedText.split(/(\s+)/).map((part, index) => {
               const isRecentlyCompleted = recentlyCompletedWords.some(w => w.word === part);
 
@@ -232,6 +232,25 @@ export default function AboutPage() {
             }
             100% {
               -webkit-text-fill-color: rgba(255, 255, 255, 0.9);
+            }
+          }
+
+          /* Responsive styles for mobile devices */
+          @media (max-width: 768px) { /* Adjust breakpoint as needed */
+            .projects-container {
+              max-width: 95%; /* Make container take up more width on small screens */
+              padding: 1.5rem; /* Reduce padding for smaller screens */
+              padding-top: 2rem;
+            }
+
+            .projects-title {
+              font-size: 2.5rem; /* Decrease title font size */
+              margin-bottom: 1.5rem; /* Adjust margin */
+            }
+
+            .projects-text {
+              font-size: 1rem; /* Decrease paragraph font size */
+              line-height: 1.6; /* Adjust line height for readability */
             }
           }
         `}</style>

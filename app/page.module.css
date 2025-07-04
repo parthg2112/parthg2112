@@ -1,3 +1,5 @@
+/* page.module.css */
+
 /* Container */
 .container {
   color: #ffffff;
@@ -87,9 +89,10 @@
   margin-top: 18rem;
   padding: 2rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Allows content and button to stack vertically */
   justify-content: center;
   position: relative;
+  align-items: center; /* Centers content horizontally */
 }
 
 .content {
@@ -158,8 +161,54 @@
   object-fit: cover;
 }
 
+/* CLI Button Styles */
+.cliButtonWrapper {
+  position: relative;
+  display: none; /* This ensures it's completely hidden by default on desktop */
+  width: 100%;
+}
+
+.cliButtonGradientEffect {
+  position: absolute;
+  -inset: 0.5px;
+  border-radius: 9999px;
+  opacity: 1;
+  transition: all 0.3s ease;
+  animation: gradient-flow 3s ease infinite;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3), rgba(255,255,255,0.6), rgba(255,255,255,0.8), rgba(255,255,255,1), rgba(255,255,255,0.8), rgba(255,255,255,0.6), rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+  background-size: 400% 400%;
+  filter: blur(0.5px);
+  z-index: 5; /* <--- ADDED: Explicitly set lower z-index to be behind the button */
+}
+
+.cliButton {
+  position: relative;
+  background: rgba(69, 69, 70, 0.63);
+  backdrop-filter: blur(5px);
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10; /* Ensuring the button is on top of the gradient effect */
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+}
+
+.cliButton:hover {
+  background-color: rgba(0, 0, 0, 0.95);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
+  .main{
+    margin-top: 18rem;
+  }
+
   .header {
     padding: 1rem;
     flex-direction: column;
@@ -200,6 +249,13 @@
   .heroTitle {
     margin-top: 1rem;
   }
+
+  /* Mobile-specific CLI Button Styles */
+  .cliButtonWrapper {
+    display: flex; /* Show the button on mobile */
+    justify-content: center; /* Center horizontally */
+    margin-top: 6rem; /* Adjusted to 6rem as requested */
+  }
 }
 
 @media (max-width: 480px) {
@@ -215,6 +271,12 @@
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
   }
+}
+
+/* Keyframes */
+@keyframes gradient-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .fade-wrapper {

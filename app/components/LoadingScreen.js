@@ -12,6 +12,17 @@ const LoadingScreen = ({ onEnterSite }) => {
   const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [enterSiteGlitch, setEnterSiteGlitch] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [phraseGlitch, setPhraseGlitch] = useState(false);
+  const [loadingStartTime, setLoadingStartTime] = useState(null);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+
+  // Loading phrases
+  const loadingPhrases = [
+    'Loading Yeezus.dev...',
+    'Initializing creativity core...',
+    'Synthwave engine active...'
+  ];
 
   // Common timezones list with labels
   const timezones = [
@@ -38,6 +49,9 @@ const LoadingScreen = ({ onEnterSite }) => {
 
   // Detect user's timezone on component mount
   useEffect(() => {
+    // Set loading start time
+    setLoadingStartTime(Date.now());
+    
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     
     // Check if user's timezone is in our list, otherwise use it as is
@@ -76,6 +90,16 @@ const LoadingScreen = ({ onEnterSite }) => {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, [selectedTimezone]);
+
+  // Loading phrase rotation
+  useEffect(() => {
+    if (!isComplete) {
+      const interval = setInterval(() => {
+        setCurrentPhraseIndex((prev) => (prev + 1) % loadingPhrases.length);
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [isComplete]);
 
   // Get time-based video with timezone consideration
   const getVideoSrc = (timezone = selectedTimezone) => {
@@ -147,10 +171,11 @@ const LoadingScreen = ({ onEnterSite }) => {
           setProgress(maxProgress);
         }
         
-        // Complete when both are loaded
+        // Mark assets as loaded when both are complete
         if (videoLoaded && audioLoaded) {
           setProgress(100);
-          setTimeout(() => setIsComplete(true), 500);
+          setAssetsLoaded(true);
+          // Don't set isComplete here - let the timer handle it
         }
       };
 
@@ -265,7 +290,7 @@ const LoadingScreen = ({ onEnterSite }) => {
       // Force completion if not already complete
       if (!videoLoaded || !audioLoaded) {
         setProgress(100);
-        setIsComplete(true);
+        setAssetsLoaded(true);
       }
     };
 
@@ -274,12 +299,25 @@ const LoadingScreen = ({ onEnterSite }) => {
     }
   }, [selectedTimezone]);
 
-  // Glitch effect for progress display - only glitch, don't change actual progress
+  // Minimum loading duration timer - ensures 4-5 second minimum
+  useEffect(() => {
+    if (assetsLoaded && loadingStartTime) {
+      const elapsedTime = Date.now() - loadingStartTime;
+      const minLoadingTime = 4500; // 4.5 seconds minimum
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      setTimeout(() => {
+        setIsComplete(true);
+      }, remainingTime);
+    }
+  }, [assetsLoaded, loadingStartTime]);
+
+  // Glitch effect for progress display - increased frequency
   useEffect(() => {
     const glitchInterval = setInterval(() => {
       if (progress < 100) {
-        // Random glitch effect - occasionally show wrong number briefly
-        if (Math.random() < 0.1) { // 10% chance of glitch, reduced frequency
+        // Random glitch effect - increased frequency
+        if (Math.random() < 0.3) { // 30% chance of glitch, increased from 10%
           const glitchValue = Math.max(0, Math.min(100, progress + (Math.random() - 0.5) * 20));
           setGlitchProgress(glitchValue);
           setTimeout(() => setGlitchProgress(progress), 80); // Return to real value after 80ms
@@ -290,12 +328,29 @@ const LoadingScreen = ({ onEnterSite }) => {
         setGlitchProgress(100);
         clearInterval(glitchInterval);
       }
-    }, 200); // Less frequent updates
+    }, 100); // More frequent updates, reduced from 200ms to 100ms
 
     return () => clearInterval(glitchInterval);
   }, [progress]);
 
-  // Smooth display progress update
+  // Glitch effect for loading phrase - same as progress glitch
+  useEffect(() => {
+    const phraseGlitchInterval = setInterval(() => {
+      if (!isComplete) {
+        // Random glitch effect - same frequency as progress
+        if (Math.random() < 0.3) { // 30% chance of glitch
+          setPhraseGlitch(true);
+          setTimeout(() => setPhraseGlitch(false), 80); // Return to normal after 80ms
+        }
+      } else {
+        clearInterval(phraseGlitchInterval);
+      }
+    }, 100); // Same frequency as progress glitch
+
+    return () => clearInterval(phraseGlitchInterval);
+  }, [isComplete]);
+
+  // Smooth display progress update - ensures all numbers are shown
   useEffect(() => {
     const animateProgress = () => {
       setDisplayProgress(prev => {
@@ -338,7 +393,7 @@ const LoadingScreen = ({ onEnterSite }) => {
       <div className="absolute top-6 right-6 z-10">
         <div className="relative">
           {/* Current Time Display */}
-          <div className="text-xs text-gray-400 mb-2 text-right tracking-wide" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' }}>
+          <div className="text-xs text-gray-400 mb-2 text-right tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             {currentTime}
           </div>
           
@@ -390,6 +445,28 @@ const LoadingScreen = ({ onEnterSite }) => {
 
       {/* Main Content */}
       <div className="text-center z-10">
+        {!isComplete && (
+          <div className="mb-6">
+            <span 
+              className="inline-block text-xl font-mono font-normal text-white tracking-wider transition-all duration-75"
+              style={{
+                color: phraseGlitch ? '#ffffff' : '#ffffff',
+                textShadow: phraseGlitch 
+                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
+                  : 'none',
+                transform: phraseGlitch 
+                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)` 
+                  : 'none',
+                filter: phraseGlitch 
+                  ? 'brightness(1.5) contrast(2)' 
+                  : 'none'
+              }}
+            >
+              {loadingPhrases[currentPhraseIndex]}
+            </span>
+          </div>
+        )}
+        
         <div className="text-2xl font-mono font-normal text-white relative tracking-wider">
           {!isComplete ? (
             <span 
@@ -412,8 +489,9 @@ const LoadingScreen = ({ onEnterSite }) => {
           ) : (
             <button
               onClick={handleEnterSite}
-              className="bg-transparent border-none text-white font-mono text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 hover:underline focus:outline-none animate-fade-in decoration-1 underline-offset-4"
+              className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group"
               style={{
+                fontFamily: '"Courier New", Courier, monospace',
                 textShadow: enterSiteGlitch 
                   ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
                   : 'none',
@@ -425,7 +503,10 @@ const LoadingScreen = ({ onEnterSite }) => {
                   : 'none'
               }}
             >
-              Enter Site
+              <span className="relative">
+                Enter Site
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+              </span>
             </button>
           )}
         </div>

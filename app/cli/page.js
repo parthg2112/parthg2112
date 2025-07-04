@@ -28,19 +28,15 @@ const initialDir = {
 export default function CLIComponent() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState([
-    'ParthOS 2.2',
-    'ParthOS login: guest',
-    'Password: ********',
-    'Welcome to parthOS 2.2 (GNU/LINUX 19.4.7-pog armv12)',
-    '****************************************',
-    '* ./help for more on cmds              *',
-    '* ./gui  for UI based portfolio        *',
-    '****************************************',
-    `Last Reboot: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,
-    '999999 packages can be updated.',
-    '1345 updates are security updates.',
-    '29023 updates are useless updates.',
-    '-1 updates will completely brick your system if installed.'
+    'parthg OS v42.0 booting...',
+  'user: guest',
+  'access: granted // stay sharp',
+  '> Welcome to kernel.parthg.me [Custom Kernel 404.yzy.szn]',
+  '-----------------------------------------------',
+  '| ./help — command list                        |',
+  '| ./gui  — launch the visual interface         |',
+  '-----------------------------------------------',
+  `last boot: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,
   ]);
   const [cwd, setCwd] = useState(['home', 'guest']);
   const [fs] = useState(initialDir);
@@ -91,13 +87,13 @@ export default function CLIComponent() {
         else newOutput.push(`cat: ${file}: No such file`);
         break;
       }
-      case 'help':
-        newOutput.push('Available commands: ls, cd, cat, help, sudo');
+      case './help':
+        newOutput.push('Available commands: ls, cd, cat, sudo, ./help, ./gui');
         break;
       case 'sudo':
         newOutput.push('[sudo] password for guest: ********', 'Permission denied');
         break;
-      case 'gui':
+      case './gui':
         window.location.href = '/';
         return;
       default:
