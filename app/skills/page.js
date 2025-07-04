@@ -81,7 +81,7 @@ export default function AboutPage() {
   const recentlyCompletedWords = completedWords.filter(w => now - w.completedAt < 1500);
 
   return (
-    <div className="flex justify-center items-start pt-45 px-4 font-['Helvetica_Neue','Helvetica','Arial','sans-serif'] skills-outer-wrapper">
+    <div className="flex justify-center items-start pt-45 px-4 font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
       <div 
         className="max-w-3xl w-full p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl skills-container"
         onMouseMove={handleMouseMove}
@@ -234,14 +234,10 @@ export default function AboutPage() {
           }
 
           /* Responsive styles for mobile devices */
-          media (max-width: 768px) { /* Adjust breakpoint as needed */
-          .skills-outer-wrapper {
-          padding-top: 1rem;
-        }
-          
-          .skills-container {
+          @media (max-width: 768px) { /* Adjust breakpoint as needed */
+            .skills-container {
               max-width: 95%; /* Make container take up more width on small screens */
-              padding: 1rem; /* Reduce padding for smaller screens */
+              padding: 1.5rem; /* Reduce padding for smaller screens */
             }
 
             .skills-title {
