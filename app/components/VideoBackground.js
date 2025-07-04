@@ -151,7 +151,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
       // If no audio data, still show debug text
       ctx.fillStyle = 'white';
       ctx.font = '14px Arial';
-      ctx.fillText('No active audio signal for visualizer.', 20, 45);
+      // ctx.fillText('No active audio signal for visualizer.', 20, 45);
       // console.log('Visualizer: No active audio signal for drawing waveform.');
     }
 
