@@ -1,19 +1,25 @@
-/* Video Background Styles */
+/* VideoBackground.module.css */
+
 .videoWrapper {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1;
   overflow: hidden;
+  z-index: -1; /* Ensures video is in the background */
+  display: flex; /* For potential centering of children if needed */
+  justify-content: center;
+  align-items: center;
 }
 
 .videoBg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  object-fit: cover; /* Ensures video covers the entire area */
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Audio Controls - Bottom right */
@@ -151,13 +157,20 @@
   text-align: center;
 }
 
+/* VideoBackground.module.css */
+.visualizerCanvas {
+  display: block;
+  width: 100%;
+  height: 100%; /* Or fixed height like 50px, but 100% of parent .audioVisualizer */
+}
+
 /* Audio Visualizer - Fixed at bottom */
 .audioVisualizer {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100vw;
-  height: 50px;
+  height: 100px;
   pointer-events: none;
   z-index: 100;
   background: linear-gradient(
@@ -231,9 +244,4 @@
 .audioButton.playing:hover {
   /* background: rgba(59, 130, 246, 1); */
   /* background: white; */
-}
-
-.audioVisualizer {
-  border: 2px solid white;
-  background: rgba(255, 255, 255, 0.2) !important;
 }

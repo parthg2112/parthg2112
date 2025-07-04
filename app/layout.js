@@ -4,7 +4,6 @@ import AppWrapper from "./components/AppWrapper";
 import MouseGlow from "./components/mouseglow";
 import Navbar from "./Navbar";
 import SocialDrawer from "./components/SocialDrawer";
-import AudioWrapper from "./components/AudioWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +26,7 @@ export default function RootLayout({ children }) {
       <body>
         <AppWrapper>
           <Navbar />
+          
           <SocialDrawer />
           {children}
         </AppWrapper>

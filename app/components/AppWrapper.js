@@ -55,6 +55,8 @@ export default function AppWrapper({ children }) {
           <div className={`fade-wrapper ${fadeIn ? 'fade-in' : ''}`}>
             {children}
           </div>
+          
+          {/* Video Background */}
           <VideoBackground 
             hasPermission={audioPermission} 
             selectedTimezone={selectedTimezone}

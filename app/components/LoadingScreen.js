@@ -130,7 +130,7 @@ const LoadingScreen = ({ onEnterSite }) => {
   useEffect(() => {
     const loadAssets = async () => {
       const videoSrc = getVideoSrc();
-      const audioSrc = '/audio/beach.mp3';
+      const audioSrc = '/audio/track1.mp3';
       
       let videoLoaded = false;
       let audioLoaded = false;
