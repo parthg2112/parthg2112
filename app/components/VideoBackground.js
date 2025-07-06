@@ -8,6 +8,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const audioRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
+  const gainNodeRef = useRef(null);
   const sourceRef = useRef(null);
   const canvasRef = useRef(null);
   const animationFrameIdRef = useRef(null); // Consistent ref name
@@ -23,9 +24,10 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     '/audio/track2.mp3',
     '/audio/track3.mp3',
     '/audio/track4.mp3',
-    '/audio/track5.mp3',
     '/audio/track6.mp3',
-    '/audio/track7.mp3'
+    '/audio/track7.mp3',
+    '/audio/track8.mp3',
+    '/audio/track9.mp3'
   ];
 
   const [trackIndex, setTrackIndex] = useState(() => (
@@ -47,13 +49,11 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
         })) :
         now.getHours();
 
-      let selected = '/videos/bright-day.mp4';
-      if (hour >= 4 && hour < 6) selected = '/videos/dawn.mp4';
-      else if (hour >= 6 && hour < 11) selected = '/videos/dayrise.mp4';
-      else if (hour >= 11 && hour < 16) selected = '/videos/bright-day.mp4';
-      else if (hour >= 16 && hour < 18.5) selected = '/videos/sunset.mp4';
-      else if (hour >= 18.5 && hour < 20) selected = '/videos/evening.mp4';
-      else selected = '/videos/midnight.mp4';
+      let selected = '/videos/Midnight.webm';
+      if (hour >= 7 && hour < 12) selected = '/videos/Sunny.webm';
+      else if (hour >= 12 && hour < 16) selected = '/videos/Afternoon.webm';
+      else if (hour >= 16 && hour < 20) selected = '/videos/Sunset.mp4';
+      else selected = '/videos/Midnight.webm';
 
       // console.log(`Video selected for hour ${hour} (Timezone: ${selectedTimezone || 'Local'}): ${selected}`);
       setVideoSrc(selected);
@@ -200,8 +200,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
       const initializeAudioAndWebAudio = async () => {
         try {
-          audioRef.current.volume = volume;
-          audioRef.current.loop = true; // Ensure audio loops
+          // audioRef.current.loop = true; // Ensure audio loops
 
           // Attempt to play audio
           await audioRef.current.play();
@@ -249,62 +248,50 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
   // 5. Setup Web Audio API
   const setupWebAudio = () => {
-    // Prevent re-initialization if context already exists and audioRef is present
-    if (audioContextRef.current || !audioRef.current) {
-      // console.log('Web Audio setup skipped: audioContextRef.current exists=', !!audioContextRef.current, 'audioRef.current exists=', !!audioRef.current);
+    // This guard clause correctly prevents the function from re-running.
+    if (sourceRef.current) {
+      console.log('Web Audio setup skipped: source node already exists.');
+      return;
+    }
+
+    // This check is also helpful.
+    if (!audioRef.current) {
+      console.error('Web Audio setup failed: audioRef is not available.');
       return;
     }
 
     try {
-      // console.log('Initiating Web Audio API setup...');
+      console.log('Initiating Web Audio API setup...');
 
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext();
 
-      // console.log('Audio Context created. Initial state:', audioContextRef.current.state);
-
+      // 1. Create all the nodes
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 2048; // Standard size
-      analyserRef.current.smoothingTimeConstant = 0.7; // Smoothness
-      // console.log('AnalyserNode created. fftSize:', analyserRef.current.fftSize, 'frequencyBinCount:', analyserRef.current.frequencyBinCount);
+      analyserRef.current.fftSize = 2048;
 
-      if (!audioRef.current) {
-        console.error("audioRef.current is null when attempting to create MediaElementSourceNode!");
-        // Revert audioInitialized if crucial ref is missing
-        setAudioInitialized(false);
-        setAudioOn(false);
-        return;
-      }
+      gainNodeRef.current = audioContextRef.current.createGain();
+      gainNodeRef.current.gain.value = volume; // Set initial volume
+
+      // 2. Create the source node ONCE
       sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-      // console.log('MediaElementSourceNode created from audioRef. Source node:', sourceRef.current);
 
+      // 3. Connect the nodes in the correct order:
+      // Source -> Analyser -> Gain -> Destination
       sourceRef.current.connect(analyserRef.current);
-      // console.log('Source connected to Analyser. Analyser node:', analyserRef.current);
+      analyserRef.current.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContextRef.current.destination);
 
-      analyserRef.current.connect(audioContextRef.current.destination);
-      // console.log('Analyser connected to AudioContext Destination.');
+      console.log('Web Audio API setup complete with correct connections.');
 
-      // Check AudioContext state for suspended
+      // 4. Resume context if it's suspended
       if (audioContextRef.current.state === 'suspended') {
-        console.warn('AudioContext is suspended. Attempting to resume...');
-        audioContextRef.current.resume().then(() => {
-          // console.log('AudioContext resumed successfully. State:', audioContextRef.current.state);
-        }).catch(resumeError => {
-          console.error('Failed to resume AudioContext:', resumeError);
-          setAudioInitialized(false); // Reset if resume fails
-          setAudioOn(false);
-        });
+        audioContextRef.current.resume();
       }
 
-      // console.log('Web Audio API setup complete. Final AudioContext state:', audioContextRef.current.state);
-
-      // IMPORTANT: Trigger drawVisualizer directly from here, after connections are made.
-      // The drawVisualizer function itself manages its requestAnimationFrame loop.
-      // console.log('Web Audio API setup complete. Final AudioContext state:', audioContextRef.current.state);
-      // The direct call to drawVisualizer() is now removed.
     } catch (error) {
       console.error('ERROR: Web Audio API setup failed unexpectedly:', error);
-      setAudioInitialized(false); // If setup failed, mark as uninitialized
+      setAudioInitialized(false);
       setAudioOn(false);
     }
   };
@@ -336,7 +323,6 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
           // console.log('AudioContext resumed. State:', audioContextRef.current.state);
         }
 
-        audioRef.current.volume = volume;
         await audioRef.current.play();
         // console.log('Audio playback initiated after toggle.');
         setAudioOn(true);
@@ -360,26 +346,34 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const handleVolumeChange = (e) => {
     const vol = parseFloat(e.target.value);
     setVolume(vol);
-    if (audioRef.current) {
-      audioRef.current.volume = vol;
+
+    // Control the GainNode's volume instead of the audio element's
+    if (gainNodeRef.current) {
+      // Use setTargetAtTime for a smoother volume change
+      gainNodeRef.current.gain.setTargetAtTime(vol, audioContextRef.current.currentTime, 0.01);
     }
   };
 
   // 8. Cleanup useEffect (runs on component unmount)
   useEffect(() => {
     return () => {
-      // console.log('VideoBackground component unmounting. Cleaning up...');
+      console.log('VideoBackground component unmounting. Cleaning up...');
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
-        animationFrameIdRef.current = null;
-        // console.log('Animation frame cancelled on unmount.');
       }
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close()
           .then(() => console.log('AudioContext closed on unmount.'))
           .catch(err => console.error('Error closing AudioContext:', err));
       }
-      // Reset audioInitialized to false if component unmounts for a fresh start on re-mount
+
+      // Nullify refs on unmount
+      sourceRef.current = null;
+      audioContextRef.current = null;
+      analyserRef.current = null;
+      gainNodeRef.current = null; // Also clear the new gain node ref
+
+      // Resetting state is also good
       setAudioInitialized(false);
       setAudioOn(false);
     };

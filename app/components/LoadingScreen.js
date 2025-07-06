@@ -47,13 +47,22 @@ const LoadingScreen = ({ onEnterSite }) => {
     { value: 'Africa/Johannesburg', label: 'Johannesburg (SAST)' }
   ];
 
+  const resetLoadingState = () => {
+    setProgress(0);
+    setDisplayProgress(0);
+    setGlitchProgress(0);
+    setIsComplete(false);
+    setAssetsLoaded(false);
+    setLoadingStartTime(Date.now());
+  };
+
   // Detect user's timezone on component mount
   useEffect(() => {
     // Set loading start time
     setLoadingStartTime(Date.now());
-    
+
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
+
     // Check if user's timezone is in our list, otherwise use it as is
     const matchingTimezone = timezones.find(tz => tz.value === userTimezone);
     if (matchingTimezone) {
@@ -104,29 +113,39 @@ const LoadingScreen = ({ onEnterSite }) => {
   // Get time-based video with timezone consideration
   const getVideoSrc = (timezone = selectedTimezone) => {
     const now = new Date();
-    
+
     // Get hour in selected timezone
-    const hour = timezone ? 
-      parseInt(now.toLocaleString('en-US', { 
-        timeZone: timezone, 
-        hour: 'numeric', 
-        hour12: false 
-      })) : 
+    const hour = timezone ?
+      parseInt(now.toLocaleString('en-US', {
+        timeZone: timezone,
+        hour: 'numeric',
+        hour12: false
+      })) :
       now.getHours();
 
-    if (hour >= 4 && hour < 6) return '/videos/dawn.mp4';
-    else if (hour >= 6 && hour < 11) return '/videos/dayrise.mp4';
-    else if (hour >= 11 && hour < 16) return '/videos/bright-day.mp4';
-    else if (hour >= 16 && hour < 18.5) return '/videos/sunset.mp4';
-    else if (hour >= 18.5 && hour < 20) return '/videos/evening.mp4';
-    else return '/videos/midnight.mp4';
+    if (hour >= 7 && hour < 12) return '/videos/Sunny.webm';
+    else if (hour >= 12 && hour < 16) return '/videos/Afternoon.webm';
+    else if (hour >= 16 && hour < 20) return '/videos/Sunset.mp4';
+    else return '/videos/Midnight.webm';
   };
 
   // Handle timezone change
   const handleTimezoneChange = (newTimezone) => {
     setSelectedTimezone(newTimezone);
+
+    // Reset loading state for new timezone
+    setProgress(0);
+    setIsComplete(false);
+    setAssetsLoaded(false);
+    setLoadingStartTime(Date.now());
+    setDisplayProgress(0);
+    setGlitchProgress(0);
+
     localStorage.setItem('selectedTimezone', newTimezone);
     setShowTimezoneDropdown(false);
+
+    // Reset loading state for new timezone
+    resetLoadingState();
   };
 
   // Get timezone abbreviation for display
@@ -152,10 +171,11 @@ const LoadingScreen = ({ onEnterSite }) => {
 
   // Preload assets and track progress
   useEffect(() => {
+
     const loadAssets = async () => {
       const videoSrc = getVideoSrc();
       const audioSrc = '/audio/track1.mp3';
-      
+
       let videoLoaded = false;
       let audioLoaded = false;
       let maxProgress = 0;
@@ -164,13 +184,13 @@ const LoadingScreen = ({ onEnterSite }) => {
         let totalProgress = 0;
         if (videoLoaded) totalProgress += 50;
         if (audioLoaded) totalProgress += 50;
-        
+
         // Ensure progress only increases
         if (totalProgress > maxProgress) {
           maxProgress = totalProgress;
           setProgress(maxProgress);
         }
-        
+
         // Mark assets as loaded when both are complete
         if (videoLoaded && audioLoaded) {
           setProgress(100);
@@ -182,7 +202,7 @@ const LoadingScreen = ({ onEnterSite }) => {
       // Load video
       const video = document.createElement('video');
       video.preload = 'auto';
-      
+
       const loadVideo = new Promise((resolve) => {
         let videoProgressUpdated = false;
 
@@ -198,13 +218,13 @@ const LoadingScreen = ({ onEnterSite }) => {
         // Multiple fallbacks for video loading
         video.addEventListener('canplaythrough', handleVideoLoaded);
         video.addEventListener('loadeddata', handleVideoLoaded);
-        
+
         // Progress tracking with safeguards
         video.addEventListener('progress', () => {
           if (video.buffered.length > 0 && video.duration) {
             const bufferedEnd = video.buffered.end(video.buffered.length - 1);
             const loadedPercent = (bufferedEnd / video.duration) * 100;
-            
+
             // Only update if we have significant progress and haven't marked as complete
             if (loadedPercent > 80 && !videoProgressUpdated) {
               handleVideoLoaded();
@@ -246,13 +266,13 @@ const LoadingScreen = ({ onEnterSite }) => {
         // Multiple fallbacks for audio loading
         audio.addEventListener('canplaythrough', handleAudioLoaded);
         audio.addEventListener('loadeddata', handleAudioLoaded);
-        
+
         // Progress tracking
         audio.addEventListener('progress', () => {
           if (audio.buffered.length > 0 && audio.duration) {
             const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
             const loadedPercent = (bufferedEnd / audio.duration) * 100;
-            
+
             if (loadedPercent > 80 && !audioProgressUpdated) {
               handleAudioLoaded();
             }
@@ -286,7 +306,7 @@ const LoadingScreen = ({ onEnterSite }) => {
       } catch (error) {
         console.warn('Asset loading error:', error);
       }
-      
+
       // Force completion if not already complete
       if (!videoLoaded || !audioLoaded) {
         setProgress(100);
@@ -305,7 +325,7 @@ const LoadingScreen = ({ onEnterSite }) => {
       const elapsedTime = Date.now() - loadingStartTime;
       const minLoadingTime = 4500; // 4.5 seconds minimum
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-      
+
       setTimeout(() => {
         setIsComplete(true);
       }, remainingTime);
@@ -388,15 +408,15 @@ const LoadingScreen = ({ onEnterSite }) => {
 
   return (
     <div className={`fixed inset-0 z-50 bg-black flex flex-col items-center justify-center transition-opacity duration-800 ${isEntering ? 'opacity-0' : 'opacity-100'}`}>
-      
+
       {/* Timezone Selector - Top Right */}
       <div className="absolute top-6 right-6 z-10">
         <div className="relative">
           {/* Current Time Display */}
-          <div className="text-xs text-gray-400 mb-2 text-right tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <div className="text-xs text-gray-400 mb-2 text-right tracking-wide pixel-font">
             {currentTime}
           </div>
-          
+
           {/* Timezone Button */}
           <button
             onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
@@ -419,11 +439,10 @@ const LoadingScreen = ({ onEnterSite }) => {
                 <button
                   key={timezone.value}
                   onClick={() => handleTimezoneChange(timezone.value)}
-                  className={`w-full px-4 py-2 text-left text-xs hover:bg-white/10 transition-colors duration-150 tracking-wide flex justify-between items-center ${
-                    selectedTimezone === timezone.value 
-                      ? 'bg-white/20 text-white' 
-                      : 'text-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-xs hover:bg-white/10 transition-colors duration-150 tracking-wide flex justify-between items-center ${selectedTimezone === timezone.value
+                    ? 'bg-white/20 text-white'
+                    : 'text-gray-300'
+                    }`}
                   style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' }}
                 >
                   <span>{timezone.label}</span>
@@ -437,8 +456,8 @@ const LoadingScreen = ({ onEnterSite }) => {
 
       {/* Click outside to close dropdown */}
       {showTimezoneDropdown && (
-        <div 
-          className="fixed inset-0 z-0" 
+        <div
+          className="fixed inset-0 z-0"
           onClick={() => setShowTimezoneDropdown(false)}
         />
       )}
@@ -447,18 +466,18 @@ const LoadingScreen = ({ onEnterSite }) => {
       <div className="text-center z-10">
         {!isComplete && (
           <div className="mb-6">
-            <span 
+            <span
               className="inline-block text-xl font-mono font-normal text-white tracking-wider transition-all duration-75"
               style={{
                 color: phraseGlitch ? '#ffffff' : '#ffffff',
-                textShadow: phraseGlitch 
-                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
+                textShadow: phraseGlitch
+                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000'
                   : 'none',
-                transform: phraseGlitch 
-                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)` 
+                transform: phraseGlitch
+                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)`
                   : 'none',
-                filter: phraseGlitch 
-                  ? 'brightness(1.5) contrast(2)' 
+                filter: phraseGlitch
+                  ? 'brightness(1.5) contrast(2)'
                   : 'none'
               }}
             >
@@ -466,21 +485,21 @@ const LoadingScreen = ({ onEnterSite }) => {
             </span>
           </div>
         )}
-        
-        <div className="text-2xl font-mono font-normal text-white relative tracking-wider">
+
+        <div className="text-2xl pixel-font text-white relative tracking-wider">
           {!isComplete ? (
-            <span 
+            <span
               className={`inline-block transition-all duration-75`}
               style={{
                 color: Math.abs(displayProgress - glitchProgress) > 5 ? '#ffffff' : '#ffffff',
-                textShadow: Math.abs(displayProgress - glitchProgress) > 5 
-                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
+                textShadow: Math.abs(displayProgress - glitchProgress) > 5
+                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000'
                   : 'none',
-                transform: Math.abs(displayProgress - glitchProgress) > 5 
-                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)` 
+                transform: Math.abs(displayProgress - glitchProgress) > 5
+                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)`
                   : 'none',
-                filter: Math.abs(displayProgress - glitchProgress) > 5 
-                  ? 'brightness(1.5) contrast(2)' 
+                filter: Math.abs(displayProgress - glitchProgress) > 5
+                  ? 'brightness(1.5) contrast(2)'
                   : 'none'
               }}
             >
@@ -489,17 +508,16 @@ const LoadingScreen = ({ onEnterSite }) => {
           ) : (
             <button
               onClick={handleEnterSite}
-              className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group"
+              className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group pixel-font"
               style={{
-                fontFamily: '"Courier New", Courier, monospace',
-                textShadow: enterSiteGlitch 
-                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
+                textShadow: enterSiteGlitch
+                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000'
                   : 'none',
-                transform: enterSiteGlitch 
-                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)` 
+                transform: enterSiteGlitch
+                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)`
                   : 'none',
-                filter: enterSiteGlitch 
-                  ? 'brightness(1.5) contrast(2)' 
+                filter: enterSiteGlitch
+                  ? 'brightness(1.5) contrast(2)'
                   : 'none'
               }}
             >
@@ -513,6 +531,41 @@ const LoadingScreen = ({ onEnterSite }) => {
       </div>
 
       <style jsx>{`
+        @font-face {
+          font-family: 'pixelated';
+          src: url('/fonts/pixelated.woff2') format('woff2'),
+               url('/fonts/pixelated.woff') format('woff'),
+               url('/fonts/pixelated.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+        }
+
+        @font-face {
+          font-family: 'pixelated-Bold';
+          src: url('/fonts/pixelated-bold.woff2') format('woff2'),
+               url('/fonts/pixelated-bold.woff') format('woff'),
+               url('/fonts/pixelated-bold.ttf') format('truetype');
+          font-weight: bold;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        .pixel-font {
+          font-family: 'pixelated', 'Press Start 2P', cursive;
+          font-size: 1.05rem; /* Slightly smaller for pixel font */
+          /* Enhancements for more pixelated look */
+          text-rendering: crisp-edges;
+          -webkit-font-smoothing: none;
+          -moz-osx-font-smoothing: grayscale;
+          transition: font-family 0.3s ease;
+        }
+
+        /* HOVER STATE: Change to bold pixelated font */
+        .group:hover .pixel-font {
+          font-family: 'pixelated-Bold', 'Press Start 2P', cursive;
+        }
+
         @keyframes fade-in {
           from {
             opacity: 0;
