@@ -16,6 +16,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const [audioOn, setAudioOn] = useState(true);
   const [volume, setVolume] = useState(1); // Set to max volume for testing
   const [showVolume, setShowVolume] = useState(false);
+  const controlGroupRef = useRef(null);
   const [videoSrc, setVideoSrc] = useState('');
   const [audioInitialized, setAudioInitialized] = useState(false); // Manages Web Audio API setup
 
@@ -35,6 +36,26 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   ));
   const [audioSrc, setAudioSrc] = useState(tracks[trackIndex]);
 
+  const toggleVolumeSlider = () => {
+    setShowVolume(prev => !prev);
+  };
+
+    useEffect(() => {
+    const handleClickOutside = (event) => {
+      // If the slider is shown and the click is outside the control group's ref
+      if (showVolume && controlGroupRef.current && !controlGroupRef.current.contains(event.target)) {
+        setShowVolume(false);
+      }
+    };
+
+    // Add event listener when the component mounts
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVolume]); // Re-run the effect if `showVolume` changes
   // console.log('VideoBackground component rendered. hasPermission:', hasPermission, 'AudioInitialized (state):', audioInitialized);
 
   // 1. Load video based on time and timezone
@@ -381,63 +402,69 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
   if (!videoSrc) return null;
 
-  return (
-    <div className={styles.videoWrapper}>
-      <video
-        ref={videoRef}
-        src={videoSrc}
-        autoPlay
-        muted
-        loop
-        playsInline
-        className={styles.videoBg}
-      />
+return (
+    // Use a React Fragment to return the background and controls as siblings
+    <>
+      {/* This div ONLY contains the non-interactive background elements */}
+      <div className={styles.videoWrapper}>
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className={styles.videoBg}
+        />
+        <audio
+          ref={audioRef}
+          src={audioSrc}
+          autoPlay
+          preload="auto"
+          crossOrigin="anonymous"
+          onEnded={handleSongEnd}
+        />
+      </div>
 
-      {/* Audio element - crucial for Web Audio API */}
-      <audio
-        ref={audioRef}
-        src={audioSrc}
-        autoPlay
-        preload="auto"
-        crossOrigin="anonymous" // Add this line back
-        onEnded={handleSongEnd}
-      />
-
-      {/* Audio Controls - Fixed position bottom right */}
+      {/* This div contains the UI controls and has its own z-index context */}
       <div className={styles.audioControl}>
+        {/* Attach the ref here for the "click outside" hook */}
         <div
+          ref={controlGroupRef}
           className={styles.controlGroup}
-          onMouseEnter={() => setShowVolume(true)}
-          onMouseLeave={() => setShowVolume(false)}
         >
+          {/* This button now toggles both audio and the volume slider visibility */}
           <button
-            onClick={toggleAudio}
+            onClick={() => {
+              toggleAudio();
+              toggleVolumeSlider();
+            }}
             className={`${styles.audioButton} ${audioOn ? styles.playing : ''}`}
             aria-label={audioOn ? 'Pause Background Audio' : 'Play Background Audio'}
           >
-            {/* Standard unicode play/pause symbols */}
             {audioOn ? '❚❚' : '▶'}
           </button>
-
-          {showVolume && (
-            <div className={styles.volumeContainer}>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume}
-                onChange={handleVolumeChange}
-                className={styles.volumeSlider}
-                aria-label="Volume Slider"
-              />
-              <span className={styles.volumeLabel}>{Math.round(volume * 100)}%</span>
-            </div>
-          )}
+          
+          {/* The visibility of this container is now controlled by a JS state and a CSS class */}
+          <div 
+            className={`${styles.volumeContainer} ${showVolume ? styles.volumeContainerVisible : ''}`}
+          >
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className={styles.volumeSlider}
+              aria-label="Volume Slider"
+            />
+            <span className={styles.volumeLabel}>{Math.round(volume * 100)}%</span>
+          </div>
         </div>
       </div>
-
-      {/* Audio Visualizer - Positioned absolutely at the bottom */}
+      
+      {/* The visualizer also sits on top, outside the background wrapper */}
       <div className={styles.audioVisualizer}>
         <canvas
           ref={canvasRef}
@@ -445,7 +472,6 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
           aria-label="Audio Visualizer"
         />
       </div>
-
-    </div>
+    </>
   );
 }
