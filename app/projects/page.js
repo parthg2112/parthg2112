@@ -5,15 +5,14 @@ import { useEffect, useState } from 'react';
 const fullText = `Here's a peek into things I’ve built, broken, and rebuilt.
 Most started with “What if I…” and became something fun, functional, or both.
 
-SAANai – Speech Articulation Analysis Network: Collabrated to build a real-time AI that analyzes speech for clarity, tone, and personality using the Big Five Model.
-Built to help users prep for interviews or public speaking with psychology-backed feedback.
+SAANai – Speech Articulation Analysis Network: Collabrated to build a real-time AI that analyzes speech for clarity, tone, and personality using the Big Five Model. Built to help users prep for interviews or public speaking with psychology-backed feedback.
 
-MindMarket – AI Ad Targeting: An ad system that reads digital behavior, searches, purchases, and patterns to recommend products with near-perfect relevance.
+MindMarket – AI Ad Targeting: An ad system that reads digital behavior, searches, and purchases to recommend products with near-perfect relevance.
 
 My Portfolio: Made with Next.js, React, and Tailwind CSS, this site is a fast, creative blend of real-time visuals, audio reactivity, and interactivity — a personal fusion of code and design.`;
 
 export default function ProjectsPage() {
-// Function to check sessionStorage safely for server-side rendering
+  // Function to check sessionStorage safely for server-side rendering
   const getInitialState = () => {
     if (typeof window !== 'undefined' && sessionStorage.getItem('typingAnimationComplete') === 'true') {
       return {
@@ -30,6 +29,20 @@ export default function ProjectsPage() {
   };
 
   const [displayedText, setDisplayedText] = useState(getInitialState().text);
+  // This state will trigger the glass effect after the component mounts.
+  const [isReadyForGlass, setIsReadyForGlass] = useState(false);
+
+  // ADD THIS NEW useEffect HOOK:
+  // This hook gives the browser a moment to settle after navigation,
+  // then forces the style recalculation for the glass effect.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReadyForGlass(true);
+    }, 50); // A 50ms delay is usually perfect.
+
+    return () => clearTimeout(timer); // Cleanup on unmount
+  }, []); // The empty array ensures this runs only ONCE when the component mounts.
+
   const [currentCharIndex, setCurrentCharIndex] = useState(getInitialState().index);
   const [isTypingComplete, setIsTypingComplete] = useState(getInitialState().isComplete);
 
@@ -37,7 +50,7 @@ export default function ProjectsPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // REMOVED: The check that would stop the effect from running.
+    // REMOVED: The check that stopped the effect from running again.
 
     if (currentCharIndex < fullText.length) {
       const timeout = setTimeout(() => {

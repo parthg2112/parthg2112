@@ -14,30 +14,44 @@ I love exploring real-time data, WebGL effects, and building things that feel al
 
 export default function SkillsPage() {
   // Function to check sessionStorage safely for server-side rendering
-    const getInitialState = () => {
-      if (typeof window !== 'undefined' && sessionStorage.getItem('typingAnimationComplete') === 'true') {
-        return {
-          text: fullText,
-          index: fullText.length,
-          isComplete: true,
-        };
-      }
+  const getInitialState = () => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('typingAnimationComplete') === 'true') {
       return {
-        text: '',
-        index: 0,
-        isComplete: false,
+        text: fullText,
+        index: fullText.length,
+        isComplete: true,
       };
+    }
+    return {
+      text: '',
+      index: 0,
+      isComplete: false,
     };
-  
-    const [displayedText, setDisplayedText] = useState(getInitialState().text);
-    const [currentCharIndex, setCurrentCharIndex] = useState(getInitialState().index);
-    const [isTypingComplete, setIsTypingComplete] = useState(getInitialState().isComplete);
+  };
+
+  const [displayedText, setDisplayedText] = useState(getInitialState().text);
+  // This state will trigger the glass effect after the component mounts.
+  const [isReadyForGlass, setIsReadyForGlass] = useState(false);
+
+  // ADD THIS NEW useEffect HOOK:
+  // This hook gives the browser a moment to settle after navigation,
+  // then forces the style recalculation for the glass effect.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReadyForGlass(true);
+    }, 50); // A 50ms delay is usually perfect.
+
+    return () => clearTimeout(timer); // Cleanup on unmount
+  }, []); // The empty array ensures this runs only ONCE when the component mounts.
+
+  const [currentCharIndex, setCurrentCharIndex] = useState(getInitialState().index);
+  const [isTypingComplete, setIsTypingComplete] = useState(getInitialState().isComplete);
 
   const [completedWords, setCompletedWords] = useState([]);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // REMOVED: The check that would stop the effect from running.
+    // REMOVED: The check that stopped the effect from running again.
 
     if (currentCharIndex < fullText.length) {
       const timeout = setTimeout(() => {

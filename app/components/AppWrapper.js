@@ -31,16 +31,16 @@ export default function AppWrapper({ children }) {
     // Set session storage items
     sessionStorage.setItem('hasEntered', 'true');
     sessionStorage.setItem('audioPermission', 'true');
-
+    
     // Store timezone
     if (timezone) {
       setSelectedTimezone(timezone);
       localStorage.setItem('selectedTimezone', timezone);
     }
-
+    
     setHasEntered(true);
     setAudioPermission(true);
-
+    
     setTimeout(() => setFadeIn(true), 200);
   };
 
@@ -50,23 +50,20 @@ export default function AppWrapper({ children }) {
     <>
       {!hasEntered && <LoadingScreen onEnterSite={handleEnter} />}
 
-      {/* The VideoBackground is now rendered as soon as you enter the site.
-          It exists as a stable, persistent background layer. */}
       {hasEntered && (
-        <VideoBackground
-          hasPermission={audioPermission}
-          selectedTimezone={selectedTimezone}
-        />
+        <>
+          <div className={`fade-wrapper ${fadeIn ? 'fade-in' : ''}`}>
+            {children}
+          </div>
+          
+          {/* Video Background */}
+          <VideoBackground 
+            hasPermission={audioPermission} 
+            selectedTimezone={selectedTimezone}
+          />
+        </>
       )}
-
-      {/* The page content is rendered separately and will fade in on TOP of the video.
-          This makes the layering unambiguous for the browser. */}
-      {hasEntered && (
-        <div className={`fade-wrapper ${fadeIn ? 'fade-in' : ''}`}>
-          {children}
-        </div>
-      )}
-
+      
       <style jsx>{`
         .fade-wrapper {
           opacity: 0;

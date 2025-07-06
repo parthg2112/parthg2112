@@ -105,7 +105,7 @@ const LoadingScreen = ({ onEnterSite }) => {
     if (!isComplete) {
       const interval = setInterval(() => {
         setCurrentPhraseIndex((prev) => (prev + 1) % loadingPhrases.length);
-      }, 500);
+      }, 1500);
       return () => clearInterval(interval);
     }
   }, [isComplete]);

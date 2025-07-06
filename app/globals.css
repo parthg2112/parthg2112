@@ -19,6 +19,22 @@
   }
 }
 
+@font-face {
+  font-family: 'Pixelated';
+  src: url('/font/pixelated.ttf') format('truetype'); /* Correct path from /public */
+  font-weight: normal; /* or 400 */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pixelated';
+  src: url('/font/pixelated-bold.ttf') format('truetype'); /* Correct path from /public */
+  font-weight: bold; /* or 700 */
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -63,6 +79,7 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

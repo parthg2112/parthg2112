@@ -181,7 +181,7 @@ export default function Navbar() {
       `}</style>
 
       <div
-        className="glass-navbar-fixed flex justify-between items-center p-6 overflow-hidden font-['Crimson Text', 'Georgia', 'Times New Roman', 'serif'] ${isHiddenOnCli ? 'hidden-on-cli' : ''}`"
+        className="sticky glass-navbar-fixed flex justify-between items-center p-6 overflow-hidden font-['Crimson Text', 'Georgia', 'Times New Roman', 'serif'] ${isHiddenOnCli ? 'hidden-on-cli' : ''}`"
       >
         {/* Original parthg.me link, now hidden on mobile */}
         <div className="text-xl font-bold -tracking-wider relative z-10 logo-hidden-on-mobile">
@@ -278,7 +278,7 @@ export default function Navbar() {
               filter: 'blur(0.5px)'
             }}
           />
-          <button className="relative bg-gray-900/95 backdrop-blur-sm text-white px-6 py-3 rounded-full text-sm cursor-pointer transition-all duration-300 z-10 group-hover:shadow-2xl group-hover:bg-black/95">
+          <button className="relative bg-black/80 backdrop-blur-sm text-white px-6 py-3 rounded-full text-sm cursor-pointer transition-all duration-300 z-10 group-hover:shadow-2xl group-hover:bg-black/95">
             {/* UPDATED: Applied pixelated font to the Link inside the button */}
             <Link href="/cli" className="button-pixel-font">
               SWITCH TO CLI →
