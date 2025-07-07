@@ -11,7 +11,7 @@ With a love for storytelling, music, and motion, I bring together frontend flair
 export default function AboutPage() {
   // Function to check sessionStorage safely for server-side rendering
   const getInitialState = () => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem('typingAnimationComplete') === 'true') {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('aboutTypingComplete') === 'true') {
       return {
         text: fullText,
         index: fullText.length,
@@ -75,7 +75,7 @@ export default function AboutPage() {
       setIsTypingComplete(true);
       // Save the completion state to sessionStorage
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('typingAnimationComplete', 'true');
+        sessionStorage.setItem('aboutTypingComplete', 'true');
       }
     }
   }, [currentCharIndex, displayedText]);

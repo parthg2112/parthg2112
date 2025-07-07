@@ -54,12 +54,12 @@ const SocialDrawer = () => {
   ];
 
   return (
-    <div className={`fixed top-110 -translate-y-1/2 z-50 transition-all duration-300 ease-in-out ${
+    <div className={`fixed top-90 md:top-100 -translate-y-1/2 z-50 transition-all duration-300 ease-in-out ${
       isDrawerOpen ? 'left-0' : '-left-[60px]'
     }`}>
       {/* Trigger Button */}
       <button 
-        className={`absolute -right-8 md:-right-10 md:top-1/2 -translate-y-1/2 bg-black/50 border border-white/20 text-white w-10 h-10 rounded-r-lg flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-black/70 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] backdrop-blur-sm`}
+        className={`absolute -right-9 md:-right-10 top-1/2 -translate-y-1/2 bg-black/50 border border-white/20 text-white w-10 h-10 rounded-r-lg flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-black/70 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] backdrop-blur-sm`}
         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
       >
         <svg 

@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoBackground.module.css';
 
+const assetCache = (typeof window !== 'undefined' && window.assetCache) ? window.assetCache : {};
+
 export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
@@ -58,32 +60,25 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   }, [showVolume]); // Re-run the effect if `showVolume` changes
   // console.log('VideoBackground component rendered. hasPermission:', hasPermission, 'AudioInitialized (state):', audioInitialized);
 
-  // 1. Load video based on time and timezone
+  // Load video based on time and timezone
   useEffect(() => {
     const getVideoBasedOnTimezone = () => {
       const now = new Date();
-      const hour = selectedTimezone ?
-        parseInt(now.toLocaleString('en-US', {
-          timeZone: selectedTimezone,
-          hour: 'numeric',
-          hour12: false
-        })) :
-        now.getHours();
-
+      const hour = selectedTimezone ? parseInt(now.toLocaleString('en-US', { timeZone: selectedTimezone, hour: 'numeric', hour12: false })) : now.getHours();
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      let basePath = isMobile ? '/videos/mobile/' : '/videos/';
+      const basePath = isMobile ? '/videos/mobile/' : '/videos/';
+      let selectedPath = basePath + 'Midnight.webm';
+      if (hour >= 7 && hour < 12) selectedPath = basePath + 'Sunny.webm';
+      else if (hour >= 12 && hour < 16) selectedPath = basePath + 'Afternoon.webm';
+      else if (hour >= 16 && hour < 20) selectedPath = basePath + 'Sunset.webm';
 
-      let selected = basePath + 'Midnight.webm';
-      if (hour >= 7 && hour < 12) selected = basePath + 'Sunny.webm';
-      else if (hour >= 12 && hour < 16) selected = basePath + 'Afternoon.webm';
-      else if (hour >= 16 && hour < 20) selected = basePath + 'Sunset.webm';
-      else selected = basePath + 'Midnight.webm';
-
-      // console.log(`Video selected for hour ${hour} (Timezone: ${selectedTimezone || 'Local'}): ${selected}`);
-      setVideoSrc(selected);
+      // ✨ FIX: Check the cache for the video before setting the source.
+      setVideoSrc(assetCache[selectedPath] || selectedPath);
     };
 
-    getVideoBasedOnTimezone();
+    if (selectedTimezone) {
+      getVideoBasedOnTimezone();
+    }
   }, [selectedTimezone]);
 
   // 2. Initialize canvas for visualizer size

@@ -14,7 +14,7 @@ My Portfolio: Made with Next.js, React, and Tailwind CSS, this site is a fast, c
 export default function ProjectsPage() {
   // Function to check sessionStorage safely for server-side rendering
   const getInitialState = () => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem('typingAnimationComplete') === 'true') {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('projectsTypingComplete') === 'true') {
       return {
         text: fullText,
         index: fullText.length,
@@ -78,7 +78,7 @@ export default function ProjectsPage() {
       setIsTypingComplete(true);
       // Save the completion state to sessionStorage
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('typingAnimationComplete', 'true');
+        sessionStorage.setItem('projectsTypingComplete', 'true');
       }
     }
   }, [currentCharIndex, displayedText]);
@@ -257,7 +257,7 @@ export default function ProjectsPage() {
             .projects-container {
               max-width: 95%; /* Make container take up more width on small screens */
               padding: 1.5rem; /* Reduce padding for smaller screens */
-              padding-top: 2rem;
+              margin-bottom: 2rem;
             }
 
             .projects-title {

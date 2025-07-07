@@ -46,7 +46,6 @@ export default function Navbar() {
         }
 
         .glass-navbar-fixed {
-          position: sticky;
           top: 0;
           z-index: 1000; /* Must be higher than main's z-index */
           
@@ -177,7 +176,7 @@ export default function Navbar() {
       `}</style>
 
       <div
-        className="sticky glass-navbar-fixed flex justify-between items-center p-6 overflow-hidden font-['Crimson Text', 'Georgia', 'Times New Roman', 'serif'] ${isHiddenOnCli ? 'hidden-on-cli' : ''}`"
+        className=" glass-navbar-fixed flex justify-between items-center p-6 overflow-hidden font-['Crimson Text', 'Georgia', 'Times New Roman', 'serif'] ${isHiddenOnCli ? 'hidden-on-cli' : ''}`"
       >
         {/* Original parthg.me link, now hidden on mobile */}
         <div className="text-xl font-bold -tracking-wider relative z-10 logo-hidden-on-mobile">

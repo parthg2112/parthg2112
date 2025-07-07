@@ -1,8 +1,79 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const LoadingScreen = ({ onEnterSite }) => {
+// Initialize a global cache on the window object. This allows assets
+// to persist after this component unmounts.
+if (typeof window !== 'undefined' && !window.assetCache) {
+  window.assetCache = {};
+}
+
+/**
+ * Fetches a media file, reports its download progress, and caches it as a blob URL.
+ * @param {string} url - The URL of the asset to fetch.
+ * @param {function(number):void} onProgress - A callback to report progress (0-100).
+ * @returns {Promise<string>} A promise that resolves with the blob URL.
+ */
+const fetchAndCache = (url, onProgress) => {
+  return new Promise((resolve, reject) => {
+    // 1. Check if the asset is already in our cache.
+    if (window.assetCache[url]) {
+      onProgress(100);
+      resolve(window.assetCache[url]);
+      return;
+    }
+
+    // 2. Fetch the asset from the network.
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Network response was not ok for ${url}`);
+        }
+        if (!response.body) {
+          throw new Error('Response body is null.');
+        }
+
+        const reader = response.body.getReader();
+        const contentLength = +response.headers.get('Content-Length');
+        let receivedLength = 0;
+        const chunks = [];
+
+        // 3. Read the download stream chunk by chunk.
+        const read = () => {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              onProgress(100);
+              const blob = new Blob(chunks);
+              const blobUrl = URL.createObjectURL(blob);
+              window.assetCache[url] = blobUrl; // Cache the result
+              resolve(blobUrl);
+              return;
+            }
+
+            chunks.push(value);
+            receivedLength += value.length;
+
+            // 4. Calculate and report progress.
+            if (contentLength) {
+              const progress = Math.min(100, (receivedLength / contentLength) * 100);
+              onProgress(progress);
+            }
+
+            read(); // Continue reading the stream
+          }).catch(reject);
+        };
+        read();
+      })
+      .catch(err => {
+        console.warn(`Failed to preload ${url}:`, err);
+        onProgress(100); // Mark as complete to not block the UI
+        reject(err);
+      });
+  });
+};
+
+
+export default function LoadingScreen({ onEnterSite }) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
@@ -12,12 +83,13 @@ const LoadingScreen = ({ onEnterSite }) => {
   const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [enterSiteGlitch, setEnterSiteGlitch] = useState(false);
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [phraseGlitch, setPhraseGlitch] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState(null);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
 
-  // Loading phrases
+  // --- All your other existing UI state and functions can remain ---
+  // (e.g., timezones, currentPhraseIndex, showTimezoneDropdown, etc.)
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const loadingPhrases = [
     'Loading Yeezus.dev...',
     'Initializing creativity core...',
@@ -50,7 +122,6 @@ const LoadingScreen = ({ onEnterSite }) => {
   const resetLoadingState = () => {
     setProgress(0);
     setDisplayProgress(0);
-    setGlitchProgress(0);
     setIsComplete(false);
     setAssetsLoaded(false);
     setLoadingStartTime(Date.now());
@@ -105,33 +176,26 @@ const LoadingScreen = ({ onEnterSite }) => {
     if (!isComplete) {
       const interval = setInterval(() => {
         setCurrentPhraseIndex((prev) => (prev + 1) % loadingPhrases.length);
-      }, 1500);
+      }, 600);
       return () => clearInterval(interval);
     }
   }, [isComplete]);
 
+  const progressRef = useRef({});
+
   // Get time-based video with timezone consideration
+  // Your existing function to determine the video source
   const getVideoSrc = (timezone = selectedTimezone) => {
     const now = new Date();
-
-    // Get hour in selected timezone
-    const hour = timezone ?
-      parseInt(now.toLocaleString('en-US', {
-        timeZone: timezone,
-        hour: 'numeric',
-        hour12: false
-      })) :
-      now.getHours();
-
+    const hour = timezone ? parseInt(now.toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false })) : now.getHours();
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const basePath = isMobile ? '/videos/mobile/' : '/videos/';
-
     if (hour >= 7 && hour < 12) return basePath + 'Sunny.webm';
-    else if (hour >= 12 && hour < 16) return basePath + 'Afternoon.webm';
-    else if (hour >= 16 && hour < 20) return basePath + 'Sunset.webm';
-    else return basePath + 'Midnight.webm';
-
+    if (hour >= 12 && hour < 16) return basePath + 'Afternoon.webm';
+    if (hour >= 16 && hour < 20) return basePath + 'Sunset.webm';
+    return basePath + 'Midnight.webm';
   };
+
 
   // Handle timezone change
   const handleTimezoneChange = (newTimezone) => {
@@ -143,7 +207,6 @@ const LoadingScreen = ({ onEnterSite }) => {
     setAssetsLoaded(false);
     setLoadingStartTime(Date.now());
     setDisplayProgress(0);
-    setGlitchProgress(0);
 
     localStorage.setItem('selectedTimezone', newTimezone);
     setShowTimezoneDropdown(false);
@@ -173,189 +236,92 @@ const LoadingScreen = ({ onEnterSite }) => {
     });
   };
 
-  // Preload assets and track progress
+  // Main asset loading effect
   useEffect(() => {
+    // Initialize timezone and start time
+    if (!selectedTimezone) {
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const savedTimezone = localStorage.getItem('selectedTimezone');
+      setSelectedTimezone(savedTimezone || userTimezone);
+      setLoadingStartTime(Date.now());
+      return; // Rerun effect once timezone is set
+    }
 
     const loadAssets = async () => {
       const videoSrc = getVideoSrc();
-      const audioSrc = '/audio/track1.mp3';
+      const audioSrcs = [
+        '/audio/track1.mp3', '/audio/track2.mp3', '/audio/track3.mp3',
+        '/audio/track4.mp3', '/audio/track6.mp3', '/audio/track7.mp3',
+        '/audio/track8.mp3', '/audio/track9.mp3'
+      ];
 
-      let videoLoaded = false;
-      let audioLoaded = false;
-      let maxProgress = 0;
+      // Define assets and their contribution to the progress bar
+      const assetsToLoad = [
+        { url: videoSrc, weight: 0.7 }, // Video is 70% of the bar
+        { url: audioSrcs[0], weight: 0.3 } // First audio track is 30%
+      ];
+
+      progressRef.current = {}; // Reset progress tracking
 
       const updateOverallProgress = () => {
-        let totalProgress = 0;
-        if (videoLoaded) totalProgress += 50;
-        if (audioLoaded) totalProgress += 50;
-
-        // Ensure progress only increases
-        if (totalProgress > maxProgress) {
-          maxProgress = totalProgress;
-          setProgress(maxProgress);
-        }
-
-        // Mark assets as loaded when both are complete
-        if (videoLoaded && audioLoaded) {
-          setProgress(100);
-          setAssetsLoaded(true);
-          // Don't set isComplete here - let the timer handle it
-        }
+        const totalProgress = Object.values(progressRef.current).reduce((acc, asset) => acc + (asset.progress * asset.weight), 0);
+        // Use Math.max to ensure progress never goes backward
+        setProgress(prev => Math.max(prev, totalProgress));
       };
 
-      // Load video
-      const video = document.createElement('video');
-      video.preload = 'auto';
+      // Create a loader for each primary asset
+      const primaryLoaders = assetsToLoad.map(asset =>
+        fetchAndCache(asset.url, (p) => {
+          progressRef.current[asset.url] = { progress: p, weight: asset.weight };
+          updateOverallProgress();
+        })
+      );
 
-      const loadVideo = new Promise((resolve) => {
-        let videoProgressUpdated = false;
+      // Quietly preload other audio tracks in the background
+      audioSrcs.slice(1).forEach(url => fetchAndCache(url, () => { }));
 
-        const handleVideoLoaded = () => {
-          if (!videoProgressUpdated) {
-            videoLoaded = true;
-            videoProgressUpdated = true;
-            updateOverallProgress();
-            resolve();
-          }
-        };
-
-        // Multiple fallbacks for video loading
-        video.addEventListener('canplaythrough', handleVideoLoaded);
-        video.addEventListener('loadeddata', handleVideoLoaded);
-
-        // Progress tracking with safeguards
-        video.addEventListener('progress', () => {
-          if (video.buffered.length > 0 && video.duration) {
-            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-            const loadedPercent = (bufferedEnd / video.duration) * 100;
-
-            // Only update if we have significant progress and haven't marked as complete
-            if (loadedPercent > 80 && !videoProgressUpdated) {
-              handleVideoLoaded();
-            }
-          }
-        });
-
-        video.addEventListener('error', () => {
-          console.warn('Video loading error, continuing...');
-          handleVideoLoaded(); // Continue even if video fails
-        });
-
-        // Timeout fallback
-        setTimeout(() => {
-          if (!videoProgressUpdated) {
-            console.warn('Video loading timeout, continuing...');
-            handleVideoLoaded();
-          }
-        }, 10000); // 10 second timeout
-
-        video.src = videoSrc;
-        video.load();
-      });
-
-      // Load audio
-      const audio = new Audio();
-      const loadAudio = new Promise((resolve) => {
-        let audioProgressUpdated = false;
-
-        const handleAudioLoaded = () => {
-          if (!audioProgressUpdated) {
-            audioLoaded = true;
-            audioProgressUpdated = true;
-            updateOverallProgress();
-            resolve();
-          }
-        };
-
-        // Multiple fallbacks for audio loading
-        audio.addEventListener('canplaythrough', handleAudioLoaded);
-        audio.addEventListener('loadeddata', handleAudioLoaded);
-
-        // Progress tracking
-        audio.addEventListener('progress', () => {
-          if (audio.buffered.length > 0 && audio.duration) {
-            const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
-            const loadedPercent = (bufferedEnd / audio.duration) * 100;
-
-            if (loadedPercent > 80 && !audioProgressUpdated) {
-              handleAudioLoaded();
-            }
-          }
-        });
-
-        audio.addEventListener('error', () => {
-          console.warn('Audio loading error, continuing...');
-          handleAudioLoaded(); // Continue even if audio fails
-        });
-
-        // Timeout fallback
-        setTimeout(() => {
-          if (!audioProgressUpdated) {
-            console.warn('Audio loading timeout, continuing...');
-            handleAudioLoaded();
-          }
-        }, 8000); // 8 second timeout
-
-        audio.preload = 'auto';
-        audio.src = audioSrc;
-        audio.load();
-      });
-
-      // Wait for both assets with overall timeout
-      try {
-        await Promise.race([
-          Promise.all([loadVideo, loadAudio]),
-          new Promise(resolve => setTimeout(resolve, 15000)) // 15 second max wait
-        ]);
-      } catch (error) {
-        console.warn('Asset loading error:', error);
-      }
-
-      // Force completion if not already complete
-      if (!videoLoaded || !audioLoaded) {
-        setProgress(100);
-        setAssetsLoaded(true);
-      }
+      await Promise.allSettled(primaryLoaders);
     };
 
-    if (selectedTimezone) {
-      loadAssets();
-    }
+    loadAssets();
   }, [selectedTimezone]);
-
-  // Minimum loading duration timer - ensures 4-5 second minimum
-  useEffect(() => {
-    if (assetsLoaded && loadingStartTime) {
-      const elapsedTime = Date.now() - loadingStartTime;
-      const minLoadingTime = 4500; // 4.5 seconds minimum
-      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-
-      setTimeout(() => {
-        setIsComplete(true);
-      }, remainingTime);
-    }
-  }, [assetsLoaded, loadingStartTime]);
 
   // Glitch effect for progress display - increased frequency
   useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      if (progress < 100) {
-        // Random glitch effect - increased frequency
-        if (Math.random() < 0.3) { // 30% chance of glitch, increased from 10%
-          const glitchValue = Math.max(0, Math.min(100, progress + (Math.random() - 0.5) * 20));
-          setGlitchProgress(glitchValue);
-          setTimeout(() => setGlitchProgress(progress), 80); // Return to real value after 80ms
-        } else {
-          setGlitchProgress(progress);
-        }
-      } else {
-        setGlitchProgress(100);
-        clearInterval(glitchInterval);
-      }
-    }, 100); // More frequent updates, reduced from 200ms to 100ms
-
-    return () => clearInterval(glitchInterval);
+    let animationFrameId;
+    const animate = () => {
+      setDisplayProgress(current => {
+        if (current >= 100) return 100;
+        // Move display value towards the actual progress value
+        const newProgress = current + (progress - current) * 0.1;
+        return Math.abs(progress - newProgress) < 0.1 ? progress : newProgress;
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
   }, [progress]);
+
+  // Checks for loading completion
+  useEffect(() => {
+    if (progress >= 100) {
+      const elapsedTime = Date.now() - loadingStartTime;
+      const minLoadingTime = 2500; // Minimum 2.5 seconds display time
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+      const timer = setTimeout(() => {
+        setIsComplete(true);
+      }, remainingTime);
+      return () => clearTimeout(timer);
+    }
+  }, [progress, loadingStartTime]);
+
+  const handleEnterSite = () => {
+    setIsEntering(true);
+    setTimeout(() => {
+      onEnterSite(selectedTimezone);
+    }, 800);
+  };
 
   // Glitch effect for loading phrase - same as progress glitch
   useEffect(() => {
@@ -374,19 +340,23 @@ const LoadingScreen = ({ onEnterSite }) => {
     return () => clearInterval(phraseGlitchInterval);
   }, [isComplete]);
 
-  // Smooth display progress update - ensures all numbers are shown
+  // 3. Smoothly animates the displayed percentage number
   useEffect(() => {
-    const animateProgress = () => {
-      setDisplayProgress(prev => {
-        const diff = glitchProgress - prev;
-        if (Math.abs(diff) < 0.1) return glitchProgress;
-        return prev + diff * 0.15; // Smooth animation
+    let animationFrameId;
+    const animate = () => {
+      setDisplayProgress(current => {
+        if (current >= 100) {
+            cancelAnimationFrame(animationFrameId);
+            return 100;
+        }
+        const newProgress = current + (progress - current) * 0.1;
+        return Math.abs(progress - newProgress) < 0.1 ? progress : newProgress;
       });
+      animationFrameId = requestAnimationFrame(animate);
     };
-
-    const interval = setInterval(animateProgress, 16); // ~60fps
-    return () => clearInterval(interval);
-  }, [glitchProgress]);
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [progress]);
 
   // Glitch effect for "Enter Site" button
   useEffect(() => {
@@ -401,14 +371,6 @@ const LoadingScreen = ({ onEnterSite }) => {
       return () => clearInterval(glitchInterval);
     }
   }, [isComplete, isEntering]);
-
-  const handleEnterSite = () => {
-    setIsEntering(true);
-    setTimeout(() => {
-      // Pass the selected timezone to the parent component
-      onEnterSite(selectedTimezone);
-    }, 800);
-  };
 
   return (
     <div className={`fixed inset-0 z-50 bg-black flex flex-col items-center justify-center transition-opacity duration-800 ${isEntering ? 'opacity-0' : 'opacity-100'}`}>
@@ -468,70 +430,28 @@ const LoadingScreen = ({ onEnterSite }) => {
 
       {/* Main Content */}
       <div className="text-center z-10">
-        {!isComplete && (
-          <div className="mb-6">
-            <span
-              className="inline-block text-xl font-mono font-normal text-white tracking-wider transition-all duration-75"
-              style={{
-                color: phraseGlitch ? '#ffffff' : '#ffffff',
-                textShadow: phraseGlitch
-                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000'
-                  : 'none',
-                transform: phraseGlitch
-                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)`
-                  : 'none',
-                filter: phraseGlitch
-                  ? 'brightness(1.5) contrast(2)'
-                  : 'none'
-              }}
-            >
-              {loadingPhrases[currentPhraseIndex]}
-            </span>
-          </div>
-        )}
-
-        <div className="text-2xl pixel-font text-white relative tracking-wider">
-          {!isComplete ? (
-            <span
-              className={`inline-block transition-all duration-75`}
-              style={{
-                color: Math.abs(displayProgress - glitchProgress) > 5 ? '#ffffff' : '#ffffff',
-                textShadow: Math.abs(displayProgress - glitchProgress) > 5
-                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000'
-                  : 'none',
-                transform: Math.abs(displayProgress - glitchProgress) > 5
-                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)`
-                  : 'none',
-                filter: Math.abs(displayProgress - glitchProgress) > 5
-                  ? 'brightness(1.5) contrast(2)'
-                  : 'none'
-              }}
-            >
-              LOADING {Math.floor(displayProgress)}%
-            </span>
-          ) : (
-            <button
-              onClick={handleEnterSite}
-              className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group pixel-font"
-              style={{
-                textShadow: enterSiteGlitch
-                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000'
-                  : 'none',
-                transform: enterSiteGlitch
-                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)`
-                  : 'none',
-                filter: enterSiteGlitch
-                  ? 'brightness(1.5) contrast(2)'
-                  : 'none'
-              }}
-            >
-              <span className="relative">
-                Enter Site
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+        {!isComplete ? (
+          <div>
+            <div className="mb-6">
+              <span className="inline-block text-xl font-mono font-normal text-white tracking-wider">
+                {loadingPhrases[currentPhraseIndex]}
               </span>
-            </button>
-          )}
-        </div>
+            </div>
+            <div className="text-2xl pixel-font text-white relative tracking-wider">
+              <span className="inline-block transition-all duration-75">
+                LOADING {Math.floor(displayProgress)}%
+              </span>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleEnterSite}
+            className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group pixel-font"
+            style={{ textShadow: 'none' }}
+          >
+            Enter Site
+          </button>
+        )}
       </div>
 
       <style jsx>{`
@@ -593,5 +513,3 @@ const LoadingScreen = ({ onEnterSite }) => {
     </div>
   );
 };
-
-export default LoadingScreen;

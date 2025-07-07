@@ -15,7 +15,7 @@ I love exploring real-time data, WebGL effects, and building things that feel al
 export default function SkillsPage() {
   // Function to check sessionStorage safely for server-side rendering
   const getInitialState = () => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem('typingAnimationComplete') === 'true') {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('skillsTypingComplete') === 'true') {
       return {
         text: fullText,
         index: fullText.length,
@@ -79,7 +79,7 @@ export default function SkillsPage() {
       setIsTypingComplete(true);
       // Save the completion state to sessionStorage
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('typingAnimationComplete', 'true');
+        sessionStorage.setItem('skillsTypingComplete', 'true');
       }
     }
   }, [currentCharIndex, displayedText]);
@@ -257,7 +257,8 @@ export default function SkillsPage() {
           @media (max-width: 768px) { /* Adjust breakpoint as needed */
             .skills-container {
               max-width: 95%; /* Make container take up more width on small screens */
-              padding: 1.5rem; /* Reduce padding for smaller screens */
+              padding: 1.5rem; /* Reduce padding for smaller screens */a
+              margin-bottom: 2rem;
             }
 
             .skills-title {
