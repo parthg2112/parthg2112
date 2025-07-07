@@ -107,11 +107,11 @@ export default function AboutPage() {
       rgba(0, 0, 0, 0.2)
     `,
     // CONDITIONALLY APPLY THE FILTERS
-    backdropFilter: isReadyForGlass ? 'blur(20px) saturate(180%)' : 'none',
-    WebkitBackdropFilter: isReadyForGlass ? 'blur(20px) saturate(180%)' : 'none',
+    // backdropFilter: isReadyForGlass ? 'blur(20px) saturate(180%)' : 'none',
+    // WebkitBackdropFilter: isReadyForGlass ? 'blur(20px) saturate(180%)' : 'none',
     
     // ADD A SMOOTH TRANSITION (OPTIONAL BUT RECOMMENDED)
-    transition: 'backdrop-filter 0.3s ease-in-out',
+    // transition: 'backdrop-filter 0.3s ease-in-out',
 
     boxShadow: `
       0 8px 32px rgba(0, 0, 0, 0.6),

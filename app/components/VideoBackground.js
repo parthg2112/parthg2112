@@ -40,7 +40,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     setShowVolume(prev => !prev);
   };
 
-    useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
       // If the slider is shown and the click is outside the control group's ref
       if (showVolume && controlGroupRef.current && !controlGroupRef.current.contains(event.target)) {
@@ -50,7 +50,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
     // Add event listener when the component mounts
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     // Clean up the event listener when the component unmounts
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -70,11 +70,14 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
         })) :
         now.getHours();
 
-      let selected = '/videos/Midnight.webm';
-      if (hour >= 7 && hour < 12) selected = '/videos/Sunny.webm';
-      else if (hour >= 12 && hour < 16) selected = '/videos/Afternoon.webm';
-      else if (hour >= 16 && hour < 20) selected = '/videos/Sunset.mp4';
-      else selected = '/videos/Midnight.webm';
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      let basePath = isMobile ? '/videos/mobile/' : '/videos/';
+
+      let selected = basePath + 'Midnight.webm';
+      if (hour >= 7 && hour < 12) selected = basePath + 'Sunny.webm';
+      else if (hour >= 12 && hour < 16) selected = basePath + 'Afternoon.webm';
+      else if (hour >= 16 && hour < 20) selected = basePath + 'Sunset.webm';
+      else selected = basePath + 'Midnight.webm';
 
       // console.log(`Video selected for hour ${hour} (Timezone: ${selectedTimezone || 'Local'}): ${selected}`);
       setVideoSrc(selected);
@@ -87,7 +90,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      console.log('Canvas ref not available for resize useEffect (initial mount).');
+      // console.log('Canvas ref not available for resize useEffect (initial mount).');
       return;
     }
 
@@ -282,7 +285,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     }
 
     try {
-      console.log('Initiating Web Audio API setup...');
+      // console.log('Initiating Web Audio API setup...');
 
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext();
@@ -303,7 +306,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
       analyserRef.current.connect(gainNodeRef.current);
       gainNodeRef.current.connect(audioContextRef.current.destination);
 
-      console.log('Web Audio API setup complete with correct connections.');
+      // console.log('Web Audio API setup complete with correct connections.');
 
       // 4. Resume context if it's suspended
       if (audioContextRef.current.state === 'suspended') {
@@ -378,7 +381,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   // 8. Cleanup useEffect (runs on component unmount)
   useEffect(() => {
     return () => {
-      console.log('VideoBackground component unmounting. Cleaning up...');
+      // console.log('VideoBackground component unmounting. Cleaning up...');
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
       }
@@ -402,7 +405,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
   if (!videoSrc) return null;
 
-return (
+  return (
     // Use a React Fragment to return the background and controls as siblings
     <>
       {/* This div ONLY contains the non-interactive background elements */}
@@ -444,9 +447,9 @@ return (
           >
             {audioOn ? '❚❚' : '▶'}
           </button>
-          
+
           {/* The visibility of this container is now controlled by a JS state and a CSS class */}
-          <div 
+          <div
             className={`${styles.volumeContainer} ${showVolume ? styles.volumeContainerVisible : ''}`}
           >
             <input
@@ -463,7 +466,7 @@ return (
           </div>
         </div>
       </div>
-      
+
       {/* The visualizer also sits on top, outside the background wrapper */}
       <div className={styles.audioVisualizer}>
         <canvas

@@ -95,8 +95,8 @@ export default function Home() {
             <div className={styles.imageContainer}>
               <div className={styles.profileImage}>
                 <Image
-                  src="/newpfp.JPG"
-                  alt="Fredrick - Web Designer"
+                  src="/newpfp.webp"
+                  alt="Parth - Creative Developer"
                   width={600}
                   height={600}
                   className={styles.profileImg}

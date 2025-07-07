@@ -111,8 +111,8 @@
   cursor: pointer;
   appearance: none;
   transition: all 0.2s ease;
-  writing-mode: bt-lr;
-  -webkit-appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
 }
 
 .volumeSlider::-webkit-slider-thumb {

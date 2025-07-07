@@ -100,7 +100,7 @@ export default function ProjectsPage() {
   const recentlyCompletedWords = completedWords.filter(w => now - w.completedAt < 1500);
 
   return (
-    <div className="flex justify-center items-start pt-6 md:pt-30 px-0 md:px-4 font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
+    <div className="flex justify-center items-start pt-6 md:pt-30 px-0 md:px-4 mb-10px md:mb-0 font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
       <div
         className="max-w-3xl w-full p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl projects-container"
         onMouseMove={handleMouseMove}

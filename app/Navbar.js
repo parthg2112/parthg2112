@@ -114,9 +114,7 @@ export default function Navbar() {
         /* LOCAL FONT DEFINITIONS */
         @font-face {
           font-family: 'pixelated';
-          src: url('/fonts/pixelated.woff2') format('woff2'),
-               url('/fonts/pixelated.woff') format('woff'),
-               url('/fonts/pixelated.ttf') format('truetype');
+          src: url('/fonts/pixelated.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
@@ -124,9 +122,7 @@ export default function Navbar() {
 
         @font-face {
           font-family: 'pixelated-Bold';
-          src: url('/fonts/pixelated-bold.woff2') format('woff2'),
-               url('/fonts/pixelated-bold.woff') format('woff'),
-               url('/fonts/pixelated-bold.ttf') format('truetype');
+          src: url('/fonts/pixelated-bold.ttf') format('truetype');
           font-weight: bold;
           font-style: normal;
           font-display: swap;

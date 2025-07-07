@@ -123,10 +123,14 @@ const LoadingScreen = ({ onEnterSite }) => {
       })) :
       now.getHours();
 
-    if (hour >= 7 && hour < 12) return '/videos/Sunny.webm';
-    else if (hour >= 12 && hour < 16) return '/videos/Afternoon.webm';
-    else if (hour >= 16 && hour < 20) return '/videos/Sunset.mp4';
-    else return '/videos/Midnight.webm';
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const basePath = isMobile ? '/videos/mobile/' : '/videos/';
+
+    if (hour >= 7 && hour < 12) return basePath + 'Sunny.webm';
+    else if (hour >= 12 && hour < 16) return basePath + 'Afternoon.webm';
+    else if (hour >= 16 && hour < 20) return basePath + 'Sunset.webm';
+    else return basePath + 'Midnight.webm';
+
   };
 
   // Handle timezone change
@@ -533,9 +537,7 @@ const LoadingScreen = ({ onEnterSite }) => {
       <style jsx>{`
         @font-face {
           font-family: 'pixelated';
-          src: url('/fonts/pixelated.woff2') format('woff2'),
-               url('/fonts/pixelated.woff') format('woff'),
-               url('/fonts/pixelated.ttf') format('truetype');
+          src: url('/fonts/pixelated.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
@@ -543,9 +545,7 @@ const LoadingScreen = ({ onEnterSite }) => {
 
         @font-face {
           font-family: 'pixelated-Bold';
-          src: url('/fonts/pixelated-bold.woff2') format('woff2'),
-               url('/fonts/pixelated-bold.woff') format('woff'),
-               url('/fonts/pixelated-bold.ttf') format('truetype');
+          src: url('/fonts/pixelated-bold.ttf') format('truetype');
           font-weight: bold;
           font-style: normal;
           font-display: swap;
