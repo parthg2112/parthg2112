@@ -185,7 +185,7 @@
 /* --- MODIFICATION START --- */
 .cliButton {
   position: relative;
-  background: rgba(29, 29, 29, 0.904);
+  background: rgba(0, 0, 0, 0.80);
   backdrop-filter: blur(5px);
   font-family: 'Pixelated', sans-serif; /* <-- ADDED FONT */
   padding: 0.75rem 1.5rem;
