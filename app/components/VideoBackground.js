@@ -16,7 +16,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const animationFrameIdRef = useRef(null); // Consistent ref name
 
   const [audioOn, setAudioOn] = useState(true);
-  const [volume, setVolume] = useState(1); // Set to max volume for testing
+  const [volume, setVolume] = useState(1);
   const [showVolume, setShowVolume] = useState(false);
   const controlGroupRef = useRef(null);
   const [videoSrc, setVideoSrc] = useState('');

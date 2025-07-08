@@ -6,7 +6,7 @@ const fullText = `I bridge the gap between logic and aesthetics.
 
 On the frontend, I'm fluent in React, Tailwind CSS, Next.js — turning design visions into pixel-perfect, animated interfaces.
 
-On the backend, I'm comfortable with Flask, Node.js, and Python — building reliable, scalable systems. I also speak databases: SQLite3, Apache, Node.js, Flask.
+On the backend, I'm comfortable with Flask, Node.js, and Python — building reliable, scalable systems. I also speak databases: SQLite3, Apache, MongoDB.
 
 For creative storytelling, I mix tech with tools like Figma, DaVinci Resolve, and Blender to create dynamic visuals and motion.
 
