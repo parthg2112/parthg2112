@@ -26,3 +26,7 @@ I build expressive frontends and understand the backend that powers them. Comfor
 - ✉️ [Email](mailto:info@parthg.me)
 
 Thanks for stopping by!
+
+---
+
+![Quote](https://quotes-github-readme.vercel.app/api?type=horizontal&theme=dark)
