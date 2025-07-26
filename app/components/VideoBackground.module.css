@@ -39,7 +39,7 @@
 
 .audioButton {
   /* background: rgba(55, 65, 81, 0.9); */
-  background: #242222bb;
+  background: #0e0d0dbb;
   border: none;
   color: white;
   padding: 0;
@@ -60,7 +60,7 @@
 
 .audioButton:hover {
   /* background: rgba(75, 85, 99, 0.95); */
-  background: #242222e1;
+  background: #111111e1;
   /* transform: scale(1.05); */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
@@ -74,19 +74,13 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  /* background: linear-gradient(
-    to top,
-    rgba(55, 65, 81, 0.95) 0%,
-    rgba(55, 65, 81, 0.85) 70%,
-    rgba(55, 65, 81, 0.0) 100%
-  ); */
   background: linear-gradient(
     to top,
-    rgba(38, 38, 39, 0.95) 0%,
-    rgba(43, 44, 46, 0.85) 70%,
-    rgba(24, 28, 34, 0) 100%
+    rgba(20, 20, 20, 0.95) 0%,
+    rgba(22, 22, 22, 0.85) 70%,
+    rgba(10, 10, 10, 0) 100%
   );
-  padding: 20px 16px 8px 16px;
+  padding: 24px 20px 12px 20px;
   border-radius: 26px 26px 26px 26px;
   backdrop-filter: blur(15px);
   opacity: 0;
@@ -97,7 +91,7 @@
   transform: translateX(-50%) translateY(15px) scale(0.8);
   z-index: 1000;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  width: 52px;
+  width: 60px;
 }
 
 .controlGroup:hover .volumeContainer {
@@ -108,17 +102,17 @@
 }
 
 .volumeSlider {
-  width: 4px;
+  width: 6px;
   height: 120px;
   /* background: rgba(156, 163, 175, 0.4); */
-  background: #161616;
+  background: #105db4;
   border-radius: 2px;
   outline: none;
   cursor: pointer;
   appearance: none;
   transition: all 0.2s ease;
-  writing-mode: bt-lr;
-  -webkit-appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
 }
 
 .volumeSlider::-webkit-slider-thumb {
@@ -210,12 +204,20 @@
   .audioVisualizer {
     height: 60px;
   }
+
+  /* ✨ ADD THIS NEW CLASS FOR VISIBILITY */
+.volumeContainerVisible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
 }
 
 /* Additional mobile optimizations */
 @media (max-width: 480px) {
   .audioControl {
-    bottom: 80px;
+    bottom: 30px;
     right: 15px;
   }
   

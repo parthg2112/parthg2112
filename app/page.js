@@ -63,10 +63,13 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      {/* NEW: Global style for importing fonts */}
+      {/* --- MODIFICATION START --- */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Permanent+Marker&family=Merriweather:wght@400;700&family=Dancing+Script:wght@400;700&display=swap');
+        }
       `}</style>
+      {/* --- MODIFICATION END --- */}
+
 
       {/* Main Content */}
       <main className={styles.main}>
@@ -77,21 +80,23 @@ export default function Home() {
               className={styles.subtitle}
               style={{ fontFamily: fontFamilies[currentFontIndex] }}
             >
-              I&apos;m a 18 year old
+              I&apos;m an 18 year old
             </p>
 
+            {/* --- MODIFICATION START (removed .pixelFontBold class) --- */}
             <h1 className={styles.heroTitle}>
               ~{currentText}
               <span className={styles.cursor}>|</span>
             </h1>
+            {/* --- MODIFICATION END --- */}
           </div>
 
           <div className={styles.rightSection}>
             <div className={styles.imageContainer}>
               <div className={styles.profileImage}>
                 <Image
-                  src="/newpfp.JPG"
-                  alt="Fredrick - Web Designer"
+                  src="/newpfp.webp"
+                  alt="Parth - Creative Developer"
                   width={600}
                   height={600}
                   className={styles.profileImg}
@@ -105,11 +110,13 @@ export default function Home() {
         {/* <--- ADD THIS SECTION FOR THE CLI BUTTON --- > */}
         <div className={styles.cliButtonWrapper}>
           <div className={styles.cliButtonGradientEffect} />
+          {/* --- MODIFICATION START (removed .pixelFontBold class) --- */}
           <button className={styles.cliButton}>
             <Link href="/cli">
               SWITCH TO CLI →
             </Link>
           </button>
+          {/* --- MODIFICATION END --- */}
         </div>
         {/* <--- END OF CLI BUTTON SECTION --- > */}
 
