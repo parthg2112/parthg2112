@@ -433,24 +433,52 @@ export default function LoadingScreen({ onEnterSite }) {
         {!isComplete ? (
           <div>
             <div className="mb-6">
-              <span className="inline-block text-xl font-mono font-normal text-white tracking-wider">
+              <span className="inline-block text-xl font-mono font-normal text-white tracking-wider transition-all duration-75"
+              style={{
+                color: phraseGlitch ? '#ffffff' : '#ffffff',
+                textShadow: phraseGlitch 
+                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
+                  : 'none',
+                transform: phraseGlitch 
+                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)` 
+                  : 'none',
+                filter: phraseGlitch 
+                  ? 'brightness(1.5) contrast(2)' 
+                  : 'none'
+              }}
+              >
                 {loadingPhrases[currentPhraseIndex]}
               </span>
             </div>
-            <div className="text-2xl pixel-font text-white relative tracking-wider">
+            <div className="text-2xl font-mono font-normal text-white relative tracking-wider">
               <span className="inline-block transition-all duration-75">
                 LOADING {Math.floor(displayProgress)}%
               </span>
             </div>
           </div>
+
         ) : (
           <button
-            onClick={handleEnterSite}
-            className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group pixel-font"
-            style={{ textShadow: 'none' }}
-          >
-            Enter Site
-          </button>
+              onClick={handleEnterSite}
+              className="bg-transparent border-none text-white text-2xl tracking-wider uppercase transition-all duration-500 hover:opacity-70 focus:outline-none animate-fade-in group"
+              style={{
+                fontFamily: '"Courier New", Courier, monospace',
+                textShadow: enterSiteGlitch 
+                  ? '2px 0 #000000, -2px 0 #ffffff, 0 2px #000000' 
+                  : 'none',
+                transform: enterSiteGlitch 
+                  ? `translateX(${(Math.random() - 0.5) * 3}px) translateY(${(Math.random() - 0.5) * 2}px)` 
+                  : 'none',
+                filter: enterSiteGlitch 
+                  ? 'brightness(1.5) contrast(2)' 
+                  : 'none'
+              }}
+            >
+              <span className="relative">
+                Enter Site
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+              </span>
+            </button>
         )}
       </div>
 
