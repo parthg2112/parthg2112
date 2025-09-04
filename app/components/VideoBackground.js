@@ -3,18 +3,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoBackground.module.css';
 
+const assetCache = (typeof window !== 'undefined' && window.assetCache) ? window.assetCache : {};
+
 export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
+  const gainNodeRef = useRef(null);
   const sourceRef = useRef(null);
   const canvasRef = useRef(null);
   const animationFrameIdRef = useRef(null); // Consistent ref name
 
   const [audioOn, setAudioOn] = useState(true);
-  const [volume, setVolume] = useState(1); // Set to max volume for testing
+  const [volume, setVolume] = useState(1);
   const [showVolume, setShowVolume] = useState(false);
+  const controlGroupRef = useRef(null);
   const [videoSrc, setVideoSrc] = useState('');
   const [audioInitialized, setAudioInitialized] = useState(false); // Manages Web Audio API setup
 
@@ -23,9 +27,10 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
     '/audio/track2.mp3',
     '/audio/track3.mp3',
     '/audio/track4.mp3',
-    '/audio/track5.mp3',
     '/audio/track6.mp3',
-    '/audio/track7.mp3'
+    '/audio/track7.mp3',
+    '/audio/track8.mp3',
+    '/audio/track9.mp3'
   ];
 
   const [trackIndex, setTrackIndex] = useState(() => (
@@ -33,40 +38,54 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   ));
   const [audioSrc, setAudioSrc] = useState(tracks[trackIndex]);
 
+  const toggleVolumeSlider = () => {
+    setShowVolume(prev => !prev);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // If the slider is shown and the click is outside the control group's ref
+      if (showVolume && controlGroupRef.current && !controlGroupRef.current.contains(event.target)) {
+        setShowVolume(false);
+      }
+    };
+
+    // Add event listener when the component mounts
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVolume]); // Re-run the effect if `showVolume` changes
   // console.log('VideoBackground component rendered. hasPermission:', hasPermission, 'AudioInitialized (state):', audioInitialized);
 
-  // 1. Load video based on time and timezone
+  // Load video based on time and timezone
   useEffect(() => {
     const getVideoBasedOnTimezone = () => {
       const now = new Date();
-      const hour = selectedTimezone ?
-        parseInt(now.toLocaleString('en-US', {
-          timeZone: selectedTimezone,
-          hour: 'numeric',
-          hour12: false
-        })) :
-        now.getHours();
+      const hour = selectedTimezone ? parseInt(now.toLocaleString('en-US', { timeZone: selectedTimezone, hour: 'numeric', hour12: false })) : now.getHours();
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const basePath = isMobile ? '/videos/mobile/' : '/videos/';
+      let selectedPath = basePath + 'Midnight.webm';
+      if (hour >= 7 && hour < 12) selectedPath = basePath + 'Sunny.webm';
+      else if (hour >= 12 && hour < 16) selectedPath = basePath + 'Afternoon.webm';
+      else if (hour >= 16 && hour < 20) selectedPath = basePath + 'Sunset.webm';
 
-      let selected = '/videos/bright-day.mp4';
-      if (hour >= 4 && hour < 6) selected = '/videos/dawn.mp4';
-      else if (hour >= 6 && hour < 11) selected = '/videos/dayrise.mp4';
-      else if (hour >= 11 && hour < 16) selected = '/videos/bright-day.mp4';
-      else if (hour >= 16 && hour < 18.5) selected = '/videos/sunset.mp4';
-      else if (hour >= 18.5 && hour < 20) selected = '/videos/evening.mp4';
-      else selected = '/videos/midnight.mp4';
-
-      // console.log(`Video selected for hour ${hour} (Timezone: ${selectedTimezone || 'Local'}): ${selected}`);
-      setVideoSrc(selected);
+      // ✨ FIX: Check the cache for the video before setting the source.
+      setVideoSrc(assetCache[selectedPath] || selectedPath);
     };
 
-    getVideoBasedOnTimezone();
+    if (selectedTimezone) {
+      getVideoBasedOnTimezone();
+    }
   }, [selectedTimezone]);
 
   // 2. Initialize canvas for visualizer size
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      console.log('Canvas ref not available for resize useEffect (initial mount).');
+      // console.log('Canvas ref not available for resize useEffect (initial mount).');
       return;
     }
 
@@ -200,8 +219,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
       const initializeAudioAndWebAudio = async () => {
         try {
-          audioRef.current.volume = volume;
-          audioRef.current.loop = true; // Ensure audio loops
+          // audioRef.current.loop = true; // Ensure audio loops
 
           // Attempt to play audio
           await audioRef.current.play();
@@ -249,9 +267,15 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
 
   // 5. Setup Web Audio API
   const setupWebAudio = () => {
-    // Prevent re-initialization if context already exists and audioRef is present
-    if (audioContextRef.current || !audioRef.current) {
-      // console.log('Web Audio setup skipped: audioContextRef.current exists=', !!audioContextRef.current, 'audioRef.current exists=', !!audioRef.current);
+    // This guard clause correctly prevents the function from re-running.
+    if (sourceRef.current) {
+      console.log('Web Audio setup skipped: source node already exists.');
+      return;
+    }
+
+    // This check is also helpful.
+    if (!audioRef.current) {
+      console.error('Web Audio setup failed: audioRef is not available.');
       return;
     }
 
@@ -261,50 +285,32 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext();
 
-      // console.log('Audio Context created. Initial state:', audioContextRef.current.state);
-
+      // 1. Create all the nodes
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 2048; // Standard size
-      analyserRef.current.smoothingTimeConstant = 0.7; // Smoothness
-      // console.log('AnalyserNode created. fftSize:', analyserRef.current.fftSize, 'frequencyBinCount:', analyserRef.current.frequencyBinCount);
+      analyserRef.current.fftSize = 2048;
 
-      if (!audioRef.current) {
-        console.error("audioRef.current is null when attempting to create MediaElementSourceNode!");
-        // Revert audioInitialized if crucial ref is missing
-        setAudioInitialized(false);
-        setAudioOn(false);
-        return;
-      }
+      gainNodeRef.current = audioContextRef.current.createGain();
+      gainNodeRef.current.gain.value = volume; // Set initial volume
+
+      // 2. Create the source node ONCE
       sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-      // console.log('MediaElementSourceNode created from audioRef. Source node:', sourceRef.current);
 
+      // 3. Connect the nodes in the correct order:
+      // Source -> Analyser -> Gain -> Destination
       sourceRef.current.connect(analyserRef.current);
-      // console.log('Source connected to Analyser. Analyser node:', analyserRef.current);
+      analyserRef.current.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContextRef.current.destination);
 
-      analyserRef.current.connect(audioContextRef.current.destination);
-      // console.log('Analyser connected to AudioContext Destination.');
+      // console.log('Web Audio API setup complete with correct connections.');
 
-      // Check AudioContext state for suspended
+      // 4. Resume context if it's suspended
       if (audioContextRef.current.state === 'suspended') {
-        console.warn('AudioContext is suspended. Attempting to resume...');
-        audioContextRef.current.resume().then(() => {
-          // console.log('AudioContext resumed successfully. State:', audioContextRef.current.state);
-        }).catch(resumeError => {
-          console.error('Failed to resume AudioContext:', resumeError);
-          setAudioInitialized(false); // Reset if resume fails
-          setAudioOn(false);
-        });
+        audioContextRef.current.resume();
       }
 
-      // console.log('Web Audio API setup complete. Final AudioContext state:', audioContextRef.current.state);
-
-      // IMPORTANT: Trigger drawVisualizer directly from here, after connections are made.
-      // The drawVisualizer function itself manages its requestAnimationFrame loop.
-      // console.log('Web Audio API setup complete. Final AudioContext state:', audioContextRef.current.state);
-      // The direct call to drawVisualizer() is now removed.
     } catch (error) {
       console.error('ERROR: Web Audio API setup failed unexpectedly:', error);
-      setAudioInitialized(false); // If setup failed, mark as uninitialized
+      setAudioInitialized(false);
       setAudioOn(false);
     }
   };
@@ -336,7 +342,6 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
           // console.log('AudioContext resumed. State:', audioContextRef.current.state);
         }
 
-        audioRef.current.volume = volume;
         await audioRef.current.play();
         // console.log('Audio playback initiated after toggle.');
         setAudioOn(true);
@@ -360,8 +365,11 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   const handleVolumeChange = (e) => {
     const vol = parseFloat(e.target.value);
     setVolume(vol);
-    if (audioRef.current) {
-      audioRef.current.volume = vol;
+
+    // Control the GainNode's volume instead of the audio element's
+    if (gainNodeRef.current) {
+      // Use setTargetAtTime for a smoother volume change
+      gainNodeRef.current.gain.setTargetAtTime(vol, audioContextRef.current.currentTime, 0.01);
     }
   };
 
@@ -371,15 +379,20 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
       // console.log('VideoBackground component unmounting. Cleaning up...');
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
-        animationFrameIdRef.current = null;
-        // console.log('Animation frame cancelled on unmount.');
       }
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close()
           .then(() => console.log('AudioContext closed on unmount.'))
           .catch(err => console.error('Error closing AudioContext:', err));
       }
-      // Reset audioInitialized to false if component unmounts for a fresh start on re-mount
+
+      // Nullify refs on unmount
+      sourceRef.current = null;
+      audioContextRef.current = null;
+      analyserRef.current = null;
+      gainNodeRef.current = null; // Also clear the new gain node ref
+
+      // Resetting state is also good
       setAudioInitialized(false);
       setAudioOn(false);
     };
@@ -388,62 +401,68 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   if (!videoSrc) return null;
 
   return (
-    <div className={styles.videoWrapper}>
-      <video
-        ref={videoRef}
-        src={videoSrc}
-        autoPlay
-        muted
-        loop
-        playsInline
-        className={styles.videoBg}
-      />
+    // Use a React Fragment to return the background and controls as siblings
+    <>
+      {/* This div ONLY contains the non-interactive background elements */}
+      <div className={styles.videoWrapper}>
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className={styles.videoBg}
+        />
+        <audio
+          ref={audioRef}
+          src={audioSrc}
+          autoPlay
+          preload="auto"
+          crossOrigin="anonymous"
+          onEnded={handleSongEnd}
+        />
+      </div>
 
-      {/* Audio element - crucial for Web Audio API */}
-      <audio
-        ref={audioRef}
-        src={audioSrc}
-        autoPlay
-        preload="auto"
-        crossOrigin="anonymous" // Add this line back
-        onEnded={handleSongEnd}
-      />
-
-      {/* Audio Controls - Fixed position bottom right */}
+      {/* This div contains the UI controls and has its own z-index context */}
       <div className={styles.audioControl}>
+        {/* Attach the ref here for the "click outside" hook */}
         <div
+          ref={controlGroupRef}
           className={styles.controlGroup}
-          onMouseEnter={() => setShowVolume(true)}
-          onMouseLeave={() => setShowVolume(false)}
         >
+          {/* This button now toggles both audio and the volume slider visibility */}
           <button
-            onClick={toggleAudio}
+            onClick={() => {
+              toggleAudio();
+              toggleVolumeSlider();
+            }}
             className={`${styles.audioButton} ${audioOn ? styles.playing : ''}`}
             aria-label={audioOn ? 'Pause Background Audio' : 'Play Background Audio'}
           >
-            {/* Standard unicode play/pause symbols */}
             {audioOn ? '❚❚' : '▶'}
           </button>
 
-          {showVolume && (
-            <div className={styles.volumeContainer}>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume}
-                onChange={handleVolumeChange}
-                className={styles.volumeSlider}
-                aria-label="Volume Slider"
-              />
-              <span className={styles.volumeLabel}>{Math.round(volume * 100)}%</span>
-            </div>
-          )}
+          {/* The visibility of this container is now controlled by a JS state and a CSS class */}
+          <div
+            className={`${styles.volumeContainer} ${showVolume ? styles.volumeContainerVisible : ''}`}
+          >
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className={styles.volumeSlider}
+              aria-label="Volume Slider"
+            />
+            <span className={styles.volumeLabel}>{Math.round(volume * 100)}%</span>
+          </div>
         </div>
       </div>
 
-      {/* Audio Visualizer - Positioned absolutely at the bottom */}
+      {/* The visualizer also sits on top, outside the background wrapper */}
       <div className={styles.audioVisualizer}>
         <canvas
           ref={canvasRef}
@@ -451,7 +470,6 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
           aria-label="Audio Visualizer"
         />
       </div>
-
-    </div>
+    </>
   );
 }

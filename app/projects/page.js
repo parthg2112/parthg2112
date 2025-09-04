@@ -2,38 +2,55 @@
 
 import { useEffect, useState } from 'react';
 
-const fullText = `Here's a peek into things I've built, broken, and rebuilt.
-Most started with "What if I…" and ended up fun, functional, or both.
+const fullText = `Here's a peek into things I’ve built, broken, and rebuilt.
+Most started with “What if I…” and became something fun, functional, or both.
 
-SAANai – Interview Intelligence: A real-time AI tool that analyzes speech or writing to assess clarity, tone, and personality using the Big Five Model.
-Built to help users prep for interviews or public speaking with actionable, psychology-driven feedback.
+SAANai – Speech Articulation Analysis Network: Collabrated to build a real-time AI that analyzes speech for clarity, tone, and personality using the Big Five Model. Built to help users prep for interviews or public speaking with psychology-backed feedback.
 
-MindMarket – AI-Powered Ad Targeting: An intelligent ad system that studies a user's digital behavior searches, purchases, patterns, to recommend products with uncanny relevance.
-It aims to predict what you want before you even type it.
+MindMarket – AI Ad Targeting: An ad system that reads digital behavior, searches, and purchases to recommend products with near-perfect relevance.
 
-My Portfolio: Built with Next.js, React, and Tailwind CSS, this site is a creative showcase featuring real-time visuals, audio-reactive effects, and interactive components.
-It's fast, expressive, and a reflection of how I blend tech with design.`;
+My Portfolio: Made with Next.js, React, and Tailwind CSS, this site is a fast, creative blend of real-time visuals, audio reactivity, and interactivity — a personal fusion of code and design.`;
 
-export default function AboutPage() {
-  // Check if typing was completed in this session
-  const getTypingCompleted = () => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('projectsTypingCompleted') === 'true';
+export default function ProjectsPage() {
+  // Function to check sessionStorage safely for server-side rendering
+  const getInitialState = () => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('projectsTypingComplete') === 'true') {
+      return {
+        text: fullText,
+        index: fullText.length,
+        isComplete: true,
+      };
     }
-    return false;
+    return {
+      text: '',
+      index: 0,
+      isComplete: false,
+    };
   };
 
-  const [displayedText, setDisplayedText] = useState(() => getTypingCompleted() ? fullText : '');
-  const [currentCharIndex, setCurrentCharIndex] = useState(() => getTypingCompleted() ? fullText.length : 0);
-  const [isTypingComplete, setIsTypingComplete] = useState(() => getTypingCompleted());
+  const [displayedText, setDisplayedText] = useState(getInitialState().text);
+  // This state will trigger the glass effect after the component mounts.
+  const [isReadyForGlass, setIsReadyForGlass] = useState(false);
+
+  // ADD THIS NEW useEffect HOOK:
+  // This hook gives the browser a moment to settle after navigation,
+  // then forces the style recalculation for the glass effect.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReadyForGlass(true);
+    }, 50); // A 50ms delay is usually perfect.
+
+    return () => clearTimeout(timer); // Cleanup on unmount
+  }, []); // The empty array ensures this runs only ONCE when the component mounts.
+
+  const [currentCharIndex, setCurrentCharIndex] = useState(getInitialState().index);
+  const [isTypingComplete, setIsTypingComplete] = useState(getInitialState().isComplete);
+
   const [completedWords, setCompletedWords] = useState([]);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // If typing was already completed, don't restart it
-    if (getTypingCompleted()) {
-      return;
-    }
+    // REMOVED: The check that stopped the effect from running again.
 
     if (currentCharIndex < fullText.length) {
       const timeout = setTimeout(() => {
@@ -59,9 +76,9 @@ export default function AboutPage() {
       return () => clearTimeout(timeout);
     } else {
       setIsTypingComplete(true);
-      // Mark as completed in sessionStorage
+      // Save the completion state to sessionStorage
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('projectsTypingCompleted', 'true');
+        sessionStorage.setItem('projectsTypingComplete', 'true');
       }
     }
   }, [currentCharIndex, displayedText]);
@@ -83,8 +100,8 @@ export default function AboutPage() {
   const recentlyCompletedWords = completedWords.filter(w => now - w.completedAt < 1500);
 
   return (
-    <div className="flex justify-center items-start pt-30 px-4 font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
-      <div 
+    <div className="flex justify-center items-start pt-6 md:pt-30 px-0 md:px-4 mb-10px md:mb-0 font-['Helvetica_Neue','Helvetica','Arial','sans-serif']">
+      <div
         className="max-w-3xl w-full p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl projects-container"
         onMouseMove={handleMouseMove}
         style={{
@@ -92,8 +109,8 @@ export default function AboutPage() {
             radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(14, 165, 233, 0.15), transparent 40%),
             rgba(0, 0, 0, 0.2)
           `,
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          // backdropFilter: 'blur(20px) saturate(180%)',
+          // WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           boxShadow: `
             0 8px 32px rgba(0, 0, 0, 0.6),
             inset 0 1px 0 rgba(255, 255, 255, 0.1)
@@ -102,7 +119,7 @@ export default function AboutPage() {
         }}
       >
         {/* Enhanced glowing border effect */}
-        <div 
+        <div
           className="absolute inset-0 rounded-3xl opacity-60 transition-all duration-500 pointer-events-none"
           style={{
             background: `radial-gradient(500px circle at ${mousePos.x}px ${mousePos.y}px, rgba(14, 165, 233, 0.3), rgba(168, 85, 247, 0.2) 40%, transparent 70%)`,
@@ -116,7 +133,7 @@ export default function AboutPage() {
         />
 
         {/* Subtle inner glow */}
-        <div 
+        <div
           className="absolute inset-0 rounded-3xl opacity-30 transition-all duration-700 pointer-events-none"
           style={{
             background: `radial-gradient(300px circle at ${mousePos.x}px ${mousePos.y}px, rgba(34, 211, 238, 0.25), transparent 60%)`,
@@ -127,7 +144,7 @@ export default function AboutPage() {
           Projects
         </h1>
 
-        <div className="border-l-4 border-gradient-to-b from-cyan-400 to-purple-500 border-white/30 pl-6 relative z-10">
+        <div className="border-l-4 border-gradient-to-b from-cyan-400 to-purple-500 border-white/30 pl-3 md:pl-6 relative z-10">
           <p className="text-lg leading-relaxed whitespace-pre-wrap font-normal tracking-wide projects-text">
             {completedText.split(/(\s+)/).map((part, index) => {
               const isRecentlyCompleted = recentlyCompletedWords.some(w => w.word === part);
@@ -240,7 +257,7 @@ export default function AboutPage() {
             .projects-container {
               max-width: 95%; /* Make container take up more width on small screens */
               padding: 1.5rem; /* Reduce padding for smaller screens */
-              padding-top: 2rem;
+              margin-bottom: 2rem;
             }
 
             .projects-title {
