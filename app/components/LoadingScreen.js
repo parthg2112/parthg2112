@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // Initialize a global cache on the window object. This allows assets
 // to persist after this component unmounts.
@@ -72,32 +72,15 @@ const fetchAndCache = (url, onProgress) => {
   });
 };
 
-
-export default function LoadingScreen({ onEnterSite }) {
-  const [progress, setProgress] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-  const [isEntering, setIsEntering] = useState(false);
-  const [displayProgress, setDisplayProgress] = useState(0);
-  const [glitchProgress, setGlitchProgress] = useState(0);
-  const [selectedTimezone, setSelectedTimezone] = useState('');
-  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
-  const [enterSiteGlitch, setEnterSiteGlitch] = useState(false);
-  const [phraseGlitch, setPhraseGlitch] = useState(false);
-  const [loadingStartTime, setLoadingStartTime] = useState(null);
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
-
-  // --- All your other existing UI state and functions can remain ---
-  // (e.g., timezones, currentPhraseIndex, showTimezoneDropdown, etc.)
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const loadingPhrases = [
+// (e.g., timezones, currentPhraseIndex, showTimezoneDropdown, etc.)
+const loadingPhrases = [
     'Loading Yeezus.dev...',
     'Initializing creativity core...',
     'Synthwave engine active...'
-  ];
+];
 
-  // Common timezones list with labels
-  const timezones = [
+// Common timezones list with labels
+const timezones = [
     { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
     { value: 'America/Denver', label: 'Mountain Time (MT)' },
     { value: 'America/Chicago', label: 'Central Time (CT)' },
@@ -117,7 +100,22 @@ export default function LoadingScreen({ onEnterSite }) {
     { value: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires (ART)' },
     { value: 'Africa/Cairo', label: 'Cairo (EET)' },
     { value: 'Africa/Johannesburg', label: 'Johannesburg (SAST)' }
-  ];
+];
+
+export default function LoadingScreen({ onEnterSite }) {
+  const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isEntering, setIsEntering] = useState(false);
+  const [displayProgress, setDisplayProgress] = useState(0);
+  const [glitchProgress, setGlitchProgress] = useState(0);
+  const [selectedTimezone, setSelectedTimezone] = useState('');
+  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
+  const [enterSiteGlitch, setEnterSiteGlitch] = useState(false);
+  const [phraseGlitch, setPhraseGlitch] = useState(false);
+  const [loadingStartTime, setLoadingStartTime] = useState(null);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
 
   const resetLoadingState = () => {
     setProgress(0);
@@ -129,26 +127,18 @@ export default function LoadingScreen({ onEnterSite }) {
 
   // Detect user's timezone on component mount
   useEffect(() => {
-    // Set loading start time
     setLoadingStartTime(Date.now());
-
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    // Check if user's timezone is in our list, otherwise use it as is
-    const matchingTimezone = timezones.find(tz => tz.value === userTimezone);
-    if (matchingTimezone) {
-      setSelectedTimezone(userTimezone);
-    } else {
-      // Add user's timezone to the list if not present
-      setSelectedTimezone(userTimezone);
-      timezones.unshift({ value: userTimezone, label: `${userTimezone} (Auto-detected)` });
-    }
-
-    // Store in localStorage for persistence
     const savedTimezone = localStorage.getItem('selectedTimezone');
-    if (savedTimezone) {
-      setSelectedTimezone(savedTimezone);
+    const initialTimezone = savedTimezone || userTimezone;
+
+    // Use a mutable copy if we need to add to it
+    let timezoneList = [...timezones];
+    const matchingTimezone = timezoneList.find(tz => tz.value === initialTimezone);
+    if (!matchingTimezone) {
+      timezoneList.unshift({ value: initialTimezone, label: `${initialTimezone} (Auto-detected)` });
     }
+    setSelectedTimezone(initialTimezone);
   }, []);
 
   // Update current time every second
@@ -185,16 +175,16 @@ export default function LoadingScreen({ onEnterSite }) {
 
   // Get time-based video with timezone consideration
   // Your existing function to determine the video source
-  const getVideoSrc = (timezone = selectedTimezone) => {
+  const getVideoSrc = useCallback(() => {
     const now = new Date();
-    const hour = timezone ? parseInt(now.toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false })) : now.getHours();
+    const hour = selectedTimezone ? parseInt(now.toLocaleString('en-US', { timeZone: selectedTimezone, hour: 'numeric', hour12: false })) : now.getHours();
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const basePath = isMobile ? '/videos/mobile/' : '/videos/';
     if (hour >= 7 && hour < 12) return basePath + 'Sunny.webm';
     if (hour >= 12 && hour < 16) return basePath + 'Afternoon.webm';
     if (hour >= 16 && hour < 20) return basePath + 'Sunset.webm';
     return basePath + 'Midnight.webm';
-  };
+  }, [selectedTimezone]);
 
 
   // Handle timezone change
@@ -284,7 +274,7 @@ export default function LoadingScreen({ onEnterSite }) {
     };
 
     loadAssets();
-  }, [selectedTimezone]);
+  }, [selectedTimezone, getVideoSrc]);
 
   // Glitch effect for progress display - increased frequency
   useEffect(() => {

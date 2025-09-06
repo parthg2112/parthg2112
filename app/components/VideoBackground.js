@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './VideoBackground.module.css';
 
 const assetCache = (typeof window !== 'undefined' && window.assetCache) ? window.assetCache : {};
@@ -104,87 +104,51 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   }, []);
 
   // 3. Audio visualizer drawing function
-  const drawVisualizer = () => {
-    // Check refs at the start of each frame
-    if (!analyserRef.current || !canvasRef.current) {
-      console.log('Visualizer check failed (analyser or canvas missing) inside drawVisualizer. Requesting next frame if audioOn and audioInitialized are true.');
-      if (audioOn && audioInitialized) { // Still request if expected to be on
-        animationFrameIdRef.current = requestAnimationFrame(drawVisualizer);
-      }
-      return;
-    }
+  const drawVisualizer = useCallback(() => {
+        if (!analyserRef.current || !canvasRef.current) {
+            if (audioOn && audioInitialized) {
+                animationFrameIdRef.current = requestAnimationFrame(drawVisualizer);
+            }
+            return;
+        }
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = 100;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Ensure canvas dimensions are always correct
-    canvas.width = window.innerWidth;
-    canvas.height = 100;
+        const waveArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+        analyserRef.current.getByteTimeDomainData(waveArray);
+        const hasAudioData = waveArray.some(val => val !== 128);
 
-    // Always clear the canvas at the start of the frame
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const waveArray = new Uint8Array(analyserRef.current.frequencyBinCount); // Use frequencyBinCount for time domain
-    let hasAudioData = false;
-
-    try {
-      analyserRef.current.getByteTimeDomainData(waveArray);
-      hasAudioData = waveArray.some(val => val !== 128); // Check if any value is not 128
-      // console.log('Audio data check:', {
-      //   hasAudioData,
-      //   sampleValues: Array.from(waveArray.slice(0, 5)), // Show first 5 samples
-      //   audioOn,
-      //   audioInitialized,
-      //   fftSize: analyserRef.current.fftSize,
-      //   frequencyBinCount: analyserRef.current.frequencyBinCount
-      // });
-    } catch (error) {
-      console.warn('Error getting audio data from analyser:', error);
-      hasAudioData = false;
-    }
-
-    // Only draw waveform if audio is playing AND we detect actual audio data
-    if (audioOn && hasAudioData) {
-      // Draw waveform
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 25;
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-
-      const sliceWidth = canvas.width * 1.0 / waveArray.length;
-      let x = 0;
-
-      for (let i = 0; i < waveArray.length; i++) {
-        const v = waveArray[i] / 128.0; // Normalize from 0-255 to 0-2
-        const y = (v * canvas.height / 1.7) + (canvas.height / 2); // Scale to canvas height
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
+        if (audioOn && hasAudioData) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+            const sliceWidth = canvas.width * 1.0 / waveArray.length;
+            let x = 0;
+            for (let i = 0; i < waveArray.length; i++) {
+                const v = waveArray[i] / 128.0;
+                const y = (v * canvas.height / 1.7) + (canvas.height / 2);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            ctx.stroke();
         }
-        x += sliceWidth;
-      }
-      ctx.stroke();
-    } else {
-      // If no audio data, still show debug text
-      ctx.fillStyle = 'white';
-      ctx.font = '14px Arial';
-      // ctx.fillText('No active audio signal for visualizer.', 20, 45);
-      // console.log('Visualizer: No active audio signal for drawing waveform.');
-    }
 
-    // Request next frame if audio is supposed to be on AND the Web Audio API is initialized
-    if (audioOn && audioInitialized) {
-      animationFrameIdRef.current = requestAnimationFrame(drawVisualizer);
-    } else {
-      console.log('Stopping visualizer animation loop. audioOn:', audioOn, 'audioInitialized:', audioInitialized);
-      if (animationFrameIdRef.current) {
-        cancelAnimationFrame(animationFrameIdRef.current);
-        animationFrameIdRef.current = null;
-      }
-    }
-  };
+        if (audioOn && audioInitialized) {
+            animationFrameIdRef.current = requestAnimationFrame(drawVisualizer);
+        } else {
+            if (animationFrameIdRef.current) {
+                cancelAnimationFrame(animationFrameIdRef.current);
+                animationFrameIdRef.current = null;
+            }
+        }
+    }, [audioOn, audioInitialized]);
 
   const handleSongEnd = () => {
     console.log('Audio ended. Selecting a new random track...');
@@ -266,7 +230,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
   }, [audioOn, audioInitialized]); // Dependencies: This effect runs ONLY when audioOn or audioInitialized changes.
 
   // 5. Setup Web Audio API
-  const setupWebAudio = () => {
+  const setupWebAudio = useCallback(() => {
     // This guard clause correctly prevents the function from re-running.
     if (sourceRef.current) {
       console.log('Web Audio setup skipped: source node already exists.');
@@ -313,7 +277,7 @@ export default function VideoBackground({ hasPermission, selectedTimezone }) {
       setAudioInitialized(false);
       setAudioOn(false);
     }
-  };
+  }, [volume]);
 
   // 6. Toggle Audio functionality
   const toggleAudio = async () => {

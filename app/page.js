@@ -1,17 +1,12 @@
-// page.js
 'use client'
 import Image from 'next/image';
-import styles from './page.module.css'; // Make sure this is linked correctly
+import styles from './page.module.css';
 import { useState, useEffect } from 'react';
-import Link from 'next/link'; // <--- ADD THIS LINE to import Link
+import Link from 'next/link';
 
-export default function Home() {
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [currentText, setCurrentText] = useState('');
-  const [isTyping, setIsTyping] = useState(true);
+const words = ['student', 'engineer', 'developer', 'creative'];
 
-  // NEW: State and array for font animation
-  const fontFamilies = [
+const fontFamilies = [
     "'Montserrat', sans-serif",
     "'Playfair Display', serif",
     "'Permanent Marker', cursive",
@@ -19,10 +14,13 @@ export default function Home() {
     "'Bangers', cursive",
     "'Merriweather', serif",
     "'Dancing Script', cursive"
-  ];
-  const [currentFontIndex, setCurrentFontIndex] = useState(0);
+];
 
-  const words = ['student', 'engineer', 'developer', 'creative'];
+export default function Home() {
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isTyping, setIsTyping] = useState(true);
+  const [currentFontIndex, setCurrentFontIndex] = useState(0);
 
   useEffect(() => {
     const currentWord = words[currentWordIndex];
@@ -50,25 +48,23 @@ export default function Home() {
     }
 
     return () => clearTimeout(timeout);
-  }, [currentText, currentWordIndex, isTyping, words]);
+  }, [currentText, currentWordIndex, isTyping]);
 
-  // NEW: useEffect for font animation
+  // useEffect for font animation
   useEffect(() => {
     const fontInterval = setInterval(() => {
       setCurrentFontIndex((prevIndex) => (prevIndex + 1) % fontFamilies.length);
     }, 2000); // Change font every 1 second (1000ms)
 
     return () => clearInterval(fontInterval); // Clean up interval on component unmount
-  }, [fontFamilies.length]);
+  }, []);
 
   return (
     <div className={styles.container}>
-      {/* --- MODIFICATION START --- */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Permanent+Marker&family=Merriweather:wght@400;700&family=Dancing+Script:wght@400;700&display=swap');
         }
       `}</style>
-      {/* --- MODIFICATION END --- */}
 
 
       {/* Main Content */}
@@ -83,12 +79,10 @@ export default function Home() {
               I&apos;m an 18 year old
             </p>
 
-            {/* --- MODIFICATION START (removed .pixelFontBold class) --- */}
             <h1 className={styles.heroTitle}>
               ~{currentText}
               <span className={styles.cursor}>|</span>
             </h1>
-            {/* --- MODIFICATION END --- */}
           </div>
 
           <div className={styles.rightSection}>
@@ -107,18 +101,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* <--- ADD THIS SECTION FOR THE CLI BUTTON --- > */}
         <div className={styles.cliButtonWrapper}>
           <div className={styles.cliButtonGradientEffect} />
-          {/* --- MODIFICATION START (removed .pixelFontBold class) --- */}
           <button className={styles.cliButton}>
             <Link href="/cli">
               SWITCH TO CLI →
             </Link>
           </button>
-          {/* --- MODIFICATION END --- */}
         </div>
-        {/* <--- END OF CLI BUTTON SECTION --- > */}
 
       </main>
     </div>

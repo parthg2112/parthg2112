@@ -180,7 +180,7 @@ export default function Navbar() {
       >
         {/* Original parthg.me link, now hidden on mobile */}
         <div className="text-xl font-bold -tracking-wider relative z-10 logo-hidden-on-mobile">
-          <Link href="/" className="text-white hover:text-gray-300 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(0,0,0,0.6)] logo-font-marck-script">
+          <Link href="/" className="text-white hover:text-gray-300 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(0,0,0,0.6)]">
             parthg.me
           </Link>
         </div>

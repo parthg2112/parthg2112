@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function AudioVisualizer({ hasPermission, trackSrc = "/audio/track1.mp3" }) {
     const audioRef = useRef(null);
@@ -88,9 +88,9 @@ export default function AudioVisualizer({ hasPermission, trackSrc = "/audio/trac
 
             initializeAudio();
         }
-    }, [hasPermission, audioInitialized]);
+    }, [hasPermission, audioInitialized, startVisualization]);
 
-    const startVisualization = () => {
+    const startVisualization = useCallback(() => {
         if (!canvasRef.current || !analyserRef.current) return;
 
         const canvas = canvasRef.current;
@@ -111,9 +111,9 @@ export default function AudioVisualizer({ hasPermission, trackSrc = "/audio/trac
         };
 
         draw();
-    };
+    }, [drawCleanWaveform]);
 
-    const drawCleanWaveform = (ctx, data, canvas) => {
+    const drawCleanWaveform = useCallback((ctx, data, canvas) => {
         // Main waveform
         ctx.beginPath();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
@@ -124,16 +124,14 @@ export default function AudioVisualizer({ hasPermission, trackSrc = "/audio/trac
         const sliceWidth = canvas.width / data.length;
         let x = 0;
 
-        // Create smooth curve points
         const points = [];
         for (let i = 0; i < data.length; i++) {
-            const v = data[i] / 128.0; // Normalize to -1 to 1
-            const y = (v * canvas.height / 2.5) + (canvas.height / 2); // Center and scale
+            const v = data[i] / 128.0;
+            const y = (v * canvas.height / 2.5) + (canvas.height / 2);
             points.push({ x, y });
             x += sliceWidth;
         }
 
-        // Draw smooth curve
         if (points.length > 0) {
             ctx.moveTo(points[0].x, points[0].y);
             
@@ -153,8 +151,8 @@ export default function AudioVisualizer({ hasPermission, trackSrc = "/audio/trac
         }
 
         ctx.stroke();
-    };
-
+    }, []);
+    
     // Manual control functions for external use
     const togglePlayPause = async () => {
         if (!audioRef.current || !hasPermission) return;

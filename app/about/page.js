@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 const fullText = `I'm a creative technologist and developer who blends code with design. 
 
@@ -28,11 +28,19 @@ export default function AboutPage() {
   const [displayedText, setDisplayedText] = useState(getInitialState().text);
   // This state will trigger the glass effect after the component mounts.
   const [isReadyForGlass, setIsReadyForGlass] = useState(false);
-
+  const containerRef = useRef(null);
   // ADD THIS NEW useEffect HOOK:
   // This hook gives the browser a moment to settle after navigation,
   // then forces the style recalculation for the glass effect.
   useEffect(() => {
+    // This guard ensures we don't do anything until the element exists.
+    if (containerRef.current) {
+      // THE FIX: Forcing a browser reflow.
+      // Reading a property like offsetHeight makes the browser
+      // immediately calculate the element's current styles.
+      containerRef.current.offsetHeight;
+    }
+
     const timer = setTimeout(() => {
       setIsReadyForGlass(true);
     }, 50); // A 50ms delay is usually perfect.
@@ -107,11 +115,11 @@ export default function AboutPage() {
       rgba(0, 0, 0, 0.2)
     `,
     // CONDITIONALLY APPLY THE FILTERS
-    // backdropFilter: isReadyForGlass ? 'blur(20px) saturate(180%)' : 'none',
-    // WebkitBackdropFilter: isReadyForGlass ? 'blur(20px) saturate(180%)' : 'none',
+    backdropFilter: isReadyForGlass ? 'blur(10px) saturate(150%)' : 'none',
+    WebkitBackdropFilter: isReadyForGlass ? 'blur(10px) saturate(150%)' : 'none',
     
     // ADD A SMOOTH TRANSITION (OPTIONAL BUT RECOMMENDED)
-    // transition: 'backdrop-filter 0.3s ease-in-out',
+    transition: 'backdrop-filter 0.3s ease-in-out',
 
     boxShadow: `
       0 8px 32px rgba(0, 0, 0, 0.6),
